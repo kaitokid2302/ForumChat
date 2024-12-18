@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"ForumChat/internal/infrastructure/config"
+
 	"github.com/redis/go-redis/v9"
 )
 
@@ -21,4 +22,3 @@ func InitRedis() *redis.Client {
 	}
 	return client
 }
-
