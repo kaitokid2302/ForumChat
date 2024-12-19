@@ -16,10 +16,19 @@ type GroupRepostiory interface {
 	JoinGroup(groupID int, userID int) error
 	LeaveGroup(groupID int, userID int) error
 	GetUsersInAGroup(groupID int) (*[]database.User, error)
+	GetAllGroups(size int, offset int) (*[]database.Group, error)
 }
 
 type groupRepositoryImp struct {
 	db *gorm.DB
+}
+
+func (s *groupRepositoryImp) GetAllGroups(size int, offset int) (*[]database.Group, error) {
+	var groups []database.Group
+	if err := s.db.Limit(size).Offset(offset).Find(&groups).Error; err != nil {
+		return nil, err
+	}
+	return &groups, nil
 }
 
 func (s *groupRepositoryImp) GetUsersInAGroup(groupID int) (*[]database.User, error) {

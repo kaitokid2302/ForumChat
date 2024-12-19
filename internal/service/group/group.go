@@ -17,12 +17,17 @@ type GroupService interface {
 	UpgradeWebsocket(c *gin.Context, username string, userID int) error
 	GetUsersInAGroup(c *gin.Context, groupID int) (*[]database.User, error)
 	MarkRead(c *gin.Context, groupID int, userID int, messageID int) error
+	GetAllGroups(c *gin.Context, size int, offset int) (*[]database.Group, error)
 }
 
 type groupServiceImpl struct {
 	group.GroupRepostiory
 	message.MessageRepostiory
 	melody *melody.Melody
+}
+
+func (s *groupServiceImpl) GetAllGroups(c *gin.Context, size int, offset int) (*[]database.Group, error) {
+	return s.GroupRepostiory.GetAllGroups(size, offset)
 }
 
 func (s *groupServiceImpl) GetUsersInAGroup(c *gin.Context, groupID int) (*[]database.User, error) {

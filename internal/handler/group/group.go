@@ -140,6 +140,21 @@ func (h *GroupHandler) UpgradeWebsocket(c *gin.Context) {
 	}
 }
 
+func (h *GroupHandler) GetAllGroups(c *gin.Context) {
+	var input request.MessageRequest
+	if err := c.ShouldBindQuery(&input); err != nil {
+		response.ReponseOutput(c, response.Fail, err.Error(), nil)
+		return
+	}
+	groups, er := h.GroupService.GetAllGroups(c, input.Size, input.Offset)
+	if er != nil {
+		response.ReponseOutput(c, response.Fail, er.Error(), nil)
+		return
+	}
+	response.ReponseOutput(c, response.Success, "", groups)
+	return
+}
+
 // /group/new?name=: create new group
 
 // /groupd/rename?name=: rename group
