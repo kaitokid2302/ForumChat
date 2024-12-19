@@ -22,6 +22,50 @@ func NewGroupHandler(groupService group.GroupService, messageService message.Mes
 	}
 }
 
+// /group/markread/group/:groupID/user/:userID/message/:messageID
+func (h *GroupHandler) MarkRead(c *gin.Context) {
+	groupIDString := c.Param("groupID")
+	groupID, er := strconv.Atoi(groupIDString)
+	if er != nil {
+		response.ReponseOutput(c, response.Fail, er.Error(), nil)
+		return
+	}
+	userIDString := c.Param("userID")
+	userID, er := strconv.Atoi(userIDString)
+	if er != nil {
+		response.ReponseOutput(c, response.Fail, er.Error(), nil)
+		return
+	}
+	messageIDString := c.Param("messageID")
+	messageID, er := strconv.Atoi(messageIDString)
+	if er != nil {
+		response.ReponseOutput(c, response.Fail, er.Error(), nil)
+		return
+	}
+	er = h.GroupService.MarkRead(c, groupID, userID, messageID)
+	if er != nil {
+		response.ReponseOutput(c, response.Fail, er.Error(), nil)
+		return
+	}
+	response.ReponseOutput(c, response.Success, "", nil)
+}
+
+// /group/users?groupID=: get all users in a group
+func (h *GroupHandler) GetAllUsersInAGroup(c *gin.Context) {
+	groupIDString := c.Query("groupID")
+	groupID, er := strconv.Atoi(groupIDString)
+	if er != nil {
+		response.ReponseOutput(c, response.Fail, er.Error(), nil)
+		return
+	}
+	users, er := h.GroupService.GetUsersInAGroup(c, groupID)
+	if er != nil {
+		response.ReponseOutput(c, response.Fail, er.Error(), nil)
+		return
+	}
+	response.ReponseOutput(c, response.Success, "", users)
+}
+
 // /group/:userID: get all groups of a user
 func (h *GroupHandler) GetAllGroupsByUserID(c *gin.Context) {
 	userIDString := c.Param("userID")
@@ -60,7 +104,7 @@ func (h *GroupHandler) GetMessagesByGroupID(c *gin.Context) {
 }
 
 // read messageID of a group
-// /groupd/:groupID/:userID
+// /group/:groupID/:userID
 func (h *GroupHandler) GetLastReadMessage(c *gin.Context) {
 	groupIDString := c.Param("groupID")
 	groupID, er := strconv.Atoi(groupIDString)

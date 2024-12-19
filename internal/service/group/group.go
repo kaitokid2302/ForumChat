@@ -15,12 +15,22 @@ type GroupService interface {
 	GetGroupsByUserID(c *gin.Context, userID int) (*[]database.Group, error)
 	GetLastReadMessage(c *gin.Context, groupID int, userID int) (*database.Message, error)
 	UpgradeWebsocket(c *gin.Context, username string, userID int) error
+	GetUsersInAGroup(c *gin.Context, groupID int) (*[]database.User, error)
+	MarkRead(c *gin.Context, groupID int, userID int, messageID int) error
 }
 
 type groupServiceImpl struct {
 	group.GroupRepostiory
 	message.MessageRepostiory
 	melody *melody.Melody
+}
+
+func (s *groupServiceImpl) GetUsersInAGroup(c *gin.Context, groupID int) (*[]database.User, error) {
+	return s.GroupRepostiory.GetUsersInAGroup(groupID)
+}
+
+func (s *groupServiceImpl) MarkRead(c *gin.Context, groupID int, userID int, messageID int) error {
+	return s.MessageRepostiory.MarkRead(groupID, userID, messageID)
 }
 
 func (s *groupServiceImpl) GetGroupsByUserID(c *gin.Context, userID int) (*[]database.Group, error) {

@@ -1,6 +1,8 @@
 package message
 
 import (
+	"errors"
+
 	"ForumChat/internal/infrastructure/database"
 	"gorm.io/gorm"
 )
@@ -8,6 +10,7 @@ import (
 type MessageRepostiory interface {
 	GetMessagesByGroupID(groupID int, size int, offset int) (*[]database.Message, error)
 	SaveMessage(groupID int, userID int, text string) error
+	MarkRead(groupID int, userID int, messageID int) error
 }
 
 type messageRepositoryImpl struct {
@@ -34,4 +37,25 @@ func (s *messageRepositoryImpl) SaveMessage(groupID int, userID int, text string
 	}
 	return s.db.Save(&message).Error
 
+}
+
+func (s *messageRepositoryImpl) MarkRead(groupID int, userID int, messageID int) error {
+	// user must in group
+	var count int64
+	res := s.db.Debug().Table("user_groups").Where("user_id = ? and group_id = ?", userID, groupID).Count(&count)
+	if res.Error != nil {
+		return res.Error
+	}
+	if count == 0 {
+		return errors.New("user not in group")
+	}
+
+	// update read table
+	// if not exist, create
+	read := database.Read{
+		UserID:    uint(userID),
+		GroupID:   uint(groupID),
+		MessageID: uint(messageID),
+	}
+	return s.db.Save(&read).Error
 }

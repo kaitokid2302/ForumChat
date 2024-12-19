@@ -7,4 +7,6 @@ func (h *GroupHandler) InitRoute(r *gin.RouterGroup) {
 	r.GET("/group/:groupID", h.GetMessagesByGroupID)
 	r.GET("/group/:groupID/:userID", h.GetLastReadMessage)
 	r.GET("/ws", h.UpgradeWebsocket)
+	r.GET("/users", h.GetAllUsersInAGroup)
+	r.GET("/markread/group/:groupID/user/:userID/message/:messageID", h.MarkRead)
 }

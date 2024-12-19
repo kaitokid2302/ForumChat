@@ -15,10 +15,19 @@ type GroupRepostiory interface {
 	UpdateGroup(groupID int, userID int, groupName string) error
 	JoinGroup(groupID int, userID int) error
 	LeaveGroup(groupID int, userID int) error
+	GetUsersInAGroup(groupID int) (*[]database.User, error)
 }
 
 type groupRepositoryImp struct {
 	db *gorm.DB
+}
+
+func (s *groupRepositoryImp) GetUsersInAGroup(groupID int) (*[]database.User, error) {
+	var group database.Group
+	if err := s.db.Preload("Users").First(&group, groupID).Error; err != nil {
+		return nil, err
+	}
+	return group.Users, nil
 }
 
 func NewGroupRepository(db *gorm.DB) GroupRepostiory {
