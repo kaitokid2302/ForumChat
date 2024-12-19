@@ -80,7 +80,7 @@ func (h *GroupHandler) GetLastReadMessage(c *gin.Context) {
 
 func (h *GroupHandler) UpgradeWebsocket(c *gin.Context) {
 	username := c.GetString("username")
-	er := h.GroupService.UpgradeWebsocket(c, username)
+	er := h.GroupService.UpgradeWebsocket(c, username, 0)
 	if er != nil {
 		response.ReponseOutput(c, response.Fail, er.Error(), nil)
 		return

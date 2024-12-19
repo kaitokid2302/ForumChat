@@ -15,7 +15,7 @@ import (
 type GroupService interface {
 	GetGroupsByUserID(c *gin.Context, userID int) (*[]database.Group, error)
 	GetLastReadMessage(c *gin.Context, groupID int, userID int) (*database.Message, error)
-	UpgradeWebsocket(c *gin.Context, username string) error
+	UpgradeWebsocket(c *gin.Context, username string, userID int) error
 }
 
 type groupServiceImpl struct {
@@ -32,8 +32,8 @@ func (s *groupServiceImpl) GetLastReadMessage(c *gin.Context, groupID int, userI
 	return s.GroupRepostiory.GetLastReadMessage(groupID, userID)
 }
 
-func (s *groupServiceImpl) UpgradeWebsocket(c *gin.Context, username string) error {
-	return s.melody.HandleRequestWithKeys(c.Writer, c.Request, map[string]interface{}{"username": username})
+func (s *groupServiceImpl) UpgradeWebsocket(c *gin.Context, username string, userID int) error {
+	return s.melody.HandleRequestWithKeys(c.Writer, c.Request, map[string]interface{}{"username": username, "userID": userID})
 }
 
 func NewGroupService(groupRepository group.GroupRepostiory, messageRepository message.MessageRepostiory, m *melody.Melody) GroupService {
@@ -54,6 +54,12 @@ func (s *groupServiceImpl) HandleConnect(m *melody.Session) {
 		m.Close()
 		return
 	}
+	userID, ok := m.Keys["userID"].(int)
+	if !ok {
+		m.Close()
+		return
+	}
+	m.Set("userID", userID)
 	m.Set("username", username)
 }
 
@@ -64,8 +70,41 @@ func (s *groupServiceImpl) HandleMessage(m *melody.Session, msg []byte) {
 		m.Close()
 		return
 	}
-	username := m.Get()
+	userIDAny, _ := m.Get("userID")
+	userID := userIDAny.(int)
 	if payload.Type == "delete" {
-		er := s.GroupRepostiory.DeleteGroup
+		er := s.GroupRepostiory.DeleteGroup(payload.GroupID, userID)
+		if er != nil {
+			// write back to client
+			m.Write([]byte(er.Error()))
+			return
+		}
+		// write back to client
+		m.Write(msg)
+		return
+	}
+	if payload.Type == "create" {
+		er := s.GroupRepostiory.CreateGroup(payload.Name, userID)
+		if er != nil {
+			// write back to client
+			m.Write([]byte(er.Error()))
+			return
+		}
+		// write back to client
+		m.Write(msg)
+		return
+	}
+	// update name
+	if payload.Type == "update" {
+		// update name
+		er := s.GroupRepostiory.UpdateGroup(payload.GroupID, userID, payload.Name)
+		if er != nil {
+			// write back to client
+			m.Write([]byte(er.Error()))
+			return
+		}
+		// write back to client
+		m.Write(msg)
+		return
 	}
 }

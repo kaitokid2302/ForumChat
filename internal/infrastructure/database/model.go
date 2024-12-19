@@ -17,6 +17,9 @@ type Group struct {
 	Users    *[]User    `json:"users,omitempty" gorm:"many2many:user_groups;"`
 	Messages *[]Message `json:"messages,omitempty"`
 	Reads    *[]Read    `json:"reads,omitempty"`
+	// owner
+	OwnerID uint  `json:"owner_id,omitempty" gorm:"column:owner_id"`
+	Owner   *User `json:"owner,omitempty" gorm:"foreignKey:OwnerID"`
 }
 
 type Message struct {
@@ -27,6 +30,8 @@ type Message struct {
 	UserID  uint    `json:"user_id,omitempty"`
 	GroupID uint    `json:"group_id,omitempty"`
 	Reads   *[]Read `json:"reads,omitempty"`
+	// owner
+
 }
 
 type Read struct {
