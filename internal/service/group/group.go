@@ -11,7 +11,6 @@ import (
 	"github.com/olahol/melody"
 )
 
-// todo dependency injection
 type GroupService interface {
 	GetGroupsByUserID(c *gin.Context, userID int) (*[]database.Group, error)
 	GetLastReadMessage(c *gin.Context, groupID int, userID int) (*database.Message, error)
@@ -84,13 +83,15 @@ func (s *groupServiceImpl) HandleMessage(m *melody.Session, msg []byte) {
 		return
 	}
 	if payload.Type == "create" {
-		er := s.GroupRepostiory.CreateGroup(payload.Name, userID)
+		groupID, er := s.GroupRepostiory.CreateGroup(payload.Name, userID)
 		if er != nil {
 			// write back to client
 			m.Write([]byte(er.Error()))
 			return
 		}
 		// write back to client
+		payload.GroupID = groupID
+		msg, _ := json.Marshal(payload)
 		m.Write(msg)
 		return
 	}
@@ -107,4 +108,31 @@ func (s *groupServiceImpl) HandleMessage(m *melody.Session, msg []byte) {
 		m.Write(msg)
 		return
 	}
+	// join
+
+	if payload.Type == "join" {
+		er := s.GroupRepostiory.JoinGroup(payload.GroupID, userID)
+		if er != nil {
+			// write back to client
+			m.Write([]byte(er.Error()))
+			return
+		}
+		// write back to client
+		m.Write(msg)
+		return
+	}
+
+	if payload.Type == "leave" {
+		er := s.GroupRepostiory.LeaveGroup(payload.GroupID, userID)
+		if er != nil {
+			// write back to client
+			m.Write([]byte(er.Error()))
+			return
+		}
+		// write back to client
+		m.Write(msg)
+		return
+
+	}
+	// leave
 }

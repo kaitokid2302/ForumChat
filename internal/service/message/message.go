@@ -10,8 +10,6 @@ import (
 	"github.com/olahol/melody"
 )
 
-// todo dependency injection
-
 type MessageService interface {
 	GetMessagesByGroupID(c *gin.Context, groupID int, size int, offset int) (*[]database.Message, error)
 	UpgradeWebsocket(c *gin.Context, username string, userID int) error
@@ -42,8 +40,8 @@ func NewMessageService(m *melody.Melody, messageRepository message.MessageRepost
 		MessageRepostiory: messageRepository,
 	}
 
-	m.HandleConnect(s.HandleConnect)
-	m.HandleMessage(s.HandleMessage)
+	s.melody.HandleConnect(s.HandleConnect)
+	s.melody.HandleMessage(s.HandleMessage)
 	return s
 }
 
@@ -84,6 +82,10 @@ func (s *messageServiceImpl) HandleMessage(m *melody.Session, msg []byte) {
 		return
 	}
 	// save to db
-	s.MessageRepostiory.SaveMessage(payload.GroupID, payload.UserID, payload.Text)
+	er = s.MessageRepostiory.SaveMessage(payload.GroupID, payload.UserID, payload.Text)
+	if er != nil {
+		m.Write([]byte("can not send message"))
+		return
+	}
 	s.melody.Broadcast(msg)
 }

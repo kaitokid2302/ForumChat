@@ -5,18 +5,16 @@ import (
 	"gorm.io/gorm"
 )
 
-// todo dependency injection
-
 type MessageRepostiory interface {
 	GetMessagesByGroupID(groupID int, size int, offset int) (*[]database.Message, error)
-	SaveMessage(groupID int, userID int, text string)
+	SaveMessage(groupID int, userID int, text string) error
 }
 
-type messageServiceImpl struct {
+type messageRepositoryImpl struct {
 	db *gorm.DB
 }
 
-func (s *messageServiceImpl) GetMessagesByGroupID(groupID int, size int, offset int) (*[]database.Message, error) {
+func (s *messageRepositoryImpl) GetMessagesByGroupID(groupID int, size int, offset int) (*[]database.Message, error) {
 	var messages []database.Message
 	if err := s.db.Where("group_id = ?", groupID).Order("created_at desc").Limit(size).Offset(offset).Find(&messages).Error; err != nil {
 		return nil, err
@@ -24,11 +22,16 @@ func (s *messageServiceImpl) GetMessagesByGroupID(groupID int, size int, offset 
 	return &messages, nil
 }
 
-func (s *messageServiceImpl) SaveMessage(groupID int, userID int, text string) {
+func NewMessageRepository(db *gorm.DB) MessageRepostiory {
+	return &messageRepositoryImpl{db: db}
+}
+
+func (s *messageRepositoryImpl) SaveMessage(groupID int, userID int, text string) error {
 	var message = database.Message{
 		GroupID: uint(groupID),
 		UserID:  uint(userID),
 		Text:    text,
 	}
-	s.db.Save(&message)
+	return s.db.Save(&message).Error
+
 }

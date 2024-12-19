@@ -7,19 +7,21 @@ import (
 	"gorm.io/gorm"
 )
 
-// todo dependency injection
-
 type UserRepository interface {
 	ExistUserByUsername(username string) (bool, error)
 	InsertUser(username string, password string) error
 	Login(username string, password string) (bool, error, *database.User)
 }
 
-type userServiceImpl struct {
+type userRepositoryImpl struct {
 	db *gorm.DB
 }
 
-func (s *userServiceImpl) ExistUserByUsername(username string) (bool, error) {
+func NewUserRepository(db *gorm.DB) UserRepository {
+	return &userRepositoryImpl{db: db}
+}
+
+func (s *userRepositoryImpl) ExistUserByUsername(username string) (bool, error) {
 	var count int64
 	er := s.db.Model(&database.User{}).Where("username = ?", username).Count(&count).Error
 	if er != nil {
@@ -28,7 +30,7 @@ func (s *userServiceImpl) ExistUserByUsername(username string) (bool, error) {
 	return count > 0, nil
 }
 
-func (s *userServiceImpl) InsertUser(username string, password string) error {
+func (s *userRepositoryImpl) InsertUser(username string, password string) error {
 	var user = database.User{
 		Username: username,
 		Password: password,
@@ -36,7 +38,7 @@ func (s *userServiceImpl) InsertUser(username string, password string) error {
 	return s.db.Save(&user).Error
 }
 
-func (s *userServiceImpl) Login(username string, password string) (bool, error, *database.User) {
+func (s *userRepositoryImpl) Login(username string, password string) (bool, error, *database.User) {
 	var user database.User
 	er := s.db.Where("username = ? AND password = ?", username, password).First(&user).Error
 	if er != nil {

@@ -11,6 +11,12 @@ type UserHandler struct {
 	user.UserService
 }
 
+func NewUserHandler(userService user.UserService) *UserHandler {
+	return &UserHandler{
+		UserService: userService,
+	}
+}
+
 func (h *UserHandler) RegisterUser(c *gin.Context) {
 	var input request.RegisterRequest
 	if er := c.ShouldBind(&input); er != nil {

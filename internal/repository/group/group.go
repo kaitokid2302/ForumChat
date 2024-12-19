@@ -7,20 +7,25 @@ import (
 	"gorm.io/gorm"
 )
 
-// todo dependency injection
 type GroupRepostiory interface {
 	GetGroupsByUserID(id int) (*[]database.Group, error)
 	GetLastReadMessage(groupID int, userID int) (*database.Message, error)
 	DeleteGroup(groupID int, userID int) error
-	CreateGroup(name string, userID int) error
+	CreateGroup(name string, userID int) (int, error)
 	UpdateGroup(groupID int, userID int, groupName string) error
+	JoinGroup(groupID int, userID int) error
+	LeaveGroup(groupID int, userID int) error
 }
 
-type groupServiceImpl struct {
+type groupRepositoryImp struct {
 	db *gorm.DB
 }
 
-func (s *groupServiceImpl) GetGroupsByUserID(id int) (*[]database.Group, error) {
+func NewGroupRepository(db *gorm.DB) GroupRepostiory {
+	return &groupRepositoryImp{db: db}
+}
+
+func (s *groupRepositoryImp) GetGroupsByUserID(id int) (*[]database.Group, error) {
 	var user database.User
 	if err := s.db.Preload("Groups").First(&user, id).Error; err != nil {
 		return nil, err
@@ -28,7 +33,7 @@ func (s *groupServiceImpl) GetGroupsByUserID(id int) (*[]database.Group, error) 
 	return user.Groups, nil
 }
 
-func (s *groupServiceImpl) GetLastReadMessage(groupID int, userID int) (*database.Message, error) {
+func (s *groupRepositoryImp) GetLastReadMessage(groupID int, userID int) (*database.Message, error) {
 	// read table
 	var read database.Read
 	if err := s.db.Where("group_id = ? and user_id = ?", groupID, userID).First(&read).Error; err != nil {
@@ -42,34 +47,89 @@ func (s *groupServiceImpl) GetLastReadMessage(groupID int, userID int) (*databas
 	return &message, nil
 }
 
-func (s *groupServiceImpl) DeleteGroup(groupID int, userID int) error {
+func (s *groupRepositoryImp) DeleteGroup(groupID int, userID int) error {
 	// delete group owner_id = userID
-	if err := s.db.Where("id = ? and owner_id = ?", groupID, userID).Delete(&database.Group{}).Error; err != nil {
-		// if no record found
-		if err == gorm.ErrRecordNotFound {
-			return errors.New("this is not your group")
-		}
-		return err
+	result := s.db.Debug().Where("id = ? and owner_id = ?", groupID, userID).Delete(&database.Group{})
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return errors.New("this is not your group")
 	}
 	return nil
 }
 
-func (s *groupServiceImpl) CreateGroup(name string, userID int) error {
+func (s *groupRepositoryImp) CreateGroup(name string, userID int) (int, error) {
 	var group = database.Group{
 		Name:    name,
 		OwnerID: uint(userID),
 	}
-	return s.db.Save(&group).Error
+	if err := s.db.Create(&group).Error; err != nil {
+		return 0, err
+	}
+	// join group
+	if err := s.db.Exec("insert into user_groups (user_id, group_id) values (?, ?)", userID, group.ID).Error; err != nil {
+		return 0, err
+	}
+	return int(group.ID), nil
 }
 
-func (s *groupServiceImpl) UpdateGroup(groupID int, userID int, groupName string) error {
-	// update group owner_id = userID
-	if err := s.db.Model(&database.Group{}).Where("id = ? and owner_id = ?", groupID, userID).Update("name", groupName).Error; err != nil {
-		// if no record found
-		if err == gorm.ErrRecordNotFound {
-			return errors.New("this is not your group")
+func (s *groupRepositoryImp) UpdateGroup(groupID int, userID int, groupName string) error {
+	// check if user is owner
+	var group database.Group
+	if err := s.db.Where("id = ? and owner_id = ?", groupID, userID).First(&group).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("you are not the owner of this group")
+		} else {
+			return err
 		}
-		return err
+	}
+	// update group
+	group = database.Group{}
+	res := s.db.Debug().Exec("update groups set name = ? where id = ?", groupName, groupID)
+	if res.Error != nil {
+		return res.Error
+	}
+	if res.RowsAffected == 0 {
+		return errors.New("group not found")
+	}
+	return nil
+}
+
+func (s *groupRepositoryImp) JoinGroup(groupID int, userID int) error {
+	// check table user_groups, not in model
+	var count int64
+	res := s.db.Debug().Table("user_groups").Where("user_id = ? and group_id = ?", userID, groupID).Count(&count)
+	er := res.Error
+	if er == gorm.ErrRecordNotFound || count == 0 {
+		// join group
+		if er := s.db.Exec("insert into user_groups (user_id, group_id) values (?, ?)", userID, groupID).Error; er != nil {
+			return er
+		}
+		return nil
+	}
+	// if already join
+	return errors.New("you already join this group")
+}
+
+func (s *groupRepositoryImp) LeaveGroup(groupID int, userID int) error {
+	var count int64
+	res := s.db.Debug().Table("user_groups").Where("user_id = ? and group_id = ?", userID, groupID).Count(&count)
+	er := res.Error
+	if er == gorm.ErrRecordNotFound || count == 0 {
+		return errors.New("you are not in this group")
+	}
+	// if user is owner, return you can not leave, you are owner, you can only delete group
+	var group database.Group
+	if er := s.db.Where("id = ? and owner_id = ?", groupID, userID).First(&group).Error; er == nil {
+		if errors.Is(er, gorm.ErrRecordNotFound) {
+			// not the owner
+		} else {
+			return errors.New("you are the owner of this group, you can not leave, you can only delete group")
+		}
+	}
+	if er := s.db.Exec("delete from user_groups where user_id = ? and group_id = ?", userID, groupID).Error; er != nil {
+		return er
 	}
 	return nil
 }

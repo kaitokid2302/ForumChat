@@ -25,13 +25,13 @@ func (a *Auth) JWTverify() gin.HandlerFunc {
 			return
 		}
 
-		ok, email, userID := a.jwtService.Token(token)
+		ok, username, userID := a.jwtService.Token(token)
 		if !ok {
 			response.ReponseOutput(c, response.JWTVerifyFail, "", nil)
 			c.Abort()
 			return
 		}
-		c.Set("email", email)
+		c.Set("username", username)
 		c.Set("userID", userID)
 		c.Next()
 	}

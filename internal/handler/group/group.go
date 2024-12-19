@@ -15,6 +15,13 @@ type GroupHandler struct {
 	message.MessageService
 }
 
+func NewGroupHandler(groupService group.GroupService, messageService message.MessageService) *GroupHandler {
+	return &GroupHandler{
+		GroupService:   groupService,
+		MessageService: messageService,
+	}
+}
+
 // /group/:userID: get all groups of a user
 func (h *GroupHandler) GetAllGroupsByUserID(c *gin.Context) {
 	userIDString := c.Param("userID")
@@ -34,7 +41,7 @@ func (h *GroupHandler) GetAllGroupsByUserID(c *gin.Context) {
 // /group/:groupID?size=&offset=
 func (h *GroupHandler) GetMessagesByGroupID(c *gin.Context) {
 	var input request.MessageRequest
-	if er := c.ShouldBindQuery(input); er != nil {
+	if er := c.ShouldBindQuery(&input); er != nil {
 		response.ReponseOutput(c, response.Fail, er.Error(), nil)
 		return
 	}
@@ -80,7 +87,9 @@ func (h *GroupHandler) GetLastReadMessage(c *gin.Context) {
 
 func (h *GroupHandler) UpgradeWebsocket(c *gin.Context) {
 	username := c.GetString("username")
-	er := h.GroupService.UpgradeWebsocket(c, username, 0)
+	userID := c.GetInt("userID")
+
+	er := h.GroupService.UpgradeWebsocket(c, username, userID)
 	if er != nil {
 		response.ReponseOutput(c, response.Fail, er.Error(), nil)
 		return
@@ -92,3 +101,5 @@ func (h *GroupHandler) UpgradeWebsocket(c *gin.Context) {
 // /groupd/rename?name=: rename group
 
 // /groupd/delete?groupID=: delete group
+
+// all to websocket

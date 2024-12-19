@@ -9,8 +9,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// todo dependency injection
-
 type UserService interface {
 	RegisterUser(c *gin.Context, request request.RegisterRequest) error
 	LoginUser(c *gin.Context, registerRequest request.LoginRequest) (string, error)
@@ -19,6 +17,13 @@ type UserService interface {
 type userServiceImpl struct {
 	user.UserRepository
 	jwt.JWTservice
+}
+
+func NewUserService(userRepository user.UserRepository, jwtService jwt.JWTservice) UserService {
+	return &userServiceImpl{
+		UserRepository: userRepository,
+		JWTservice:     jwtService,
+	}
 }
 
 func (s *userServiceImpl) RegisterUser(c *gin.Context, request request.RegisterRequest) error {
