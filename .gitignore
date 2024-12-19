@@ -1,5 +1,13 @@
+backend/.DS_Store
+backend/.idea
+backend/node_modules
+backend/.vscode
+backend/internal/infrastructure/config/local.yaml
+
 .DS_Store
 .idea
 node_modules
 .vscode
 internal/infrastructure/config/local.yaml
+
+frontend/node_modules
