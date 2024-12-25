@@ -24,6 +24,7 @@ func Run() {
 	config.InitAll()
 	db := database.InitDatabase()
 	r := gin.Default()
+	r.Use(cors.Default())
 	melodyMessageService := websocket.InitMelody()
 	melodyGroupService := websocket.InitMelody()
 
