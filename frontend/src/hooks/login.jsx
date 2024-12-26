@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { api } from "../services/api/interceptor.js";
+import { loginRequest } from "../services/api/auth.js";
 import { setJwt } from "../services/auth/jwt.js";
 
 const useLogin = () => {
@@ -12,11 +12,11 @@ const useLogin = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await api.post("/user/login", { username, password });
-      const token = response.data.data;
+      const response = await loginRequest({ username, password });
+      const token = response.data;
       if (!token) {
-        setError(response.data.message);
-        throw new Error(response.data.message);
+        setError("Login failed");
+        throw new Error("Login failed");
       }
       setJwt(token);
       navigate("/");
