@@ -2,7 +2,7 @@ import { Button, Form, Input } from "antd";
 import { useFormik } from "formik";
 import useLogin from "../../hooks/login.jsx";
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { jwtCheck } from "../../services/auth/jwt.js";
 
 const LoginPage = () => {
@@ -84,6 +84,9 @@ const LoginPage = () => {
         <Form.Item>
           <Button type="primary" htmlType="submit" loading={loading}>
             Login
+          </Button>
+          <Button type="link">
+            <Link to="/register">Register</Link>
           </Button>
           {error && <div style={{ color: "red" }}>{error}</div>}
         </Form.Item>
