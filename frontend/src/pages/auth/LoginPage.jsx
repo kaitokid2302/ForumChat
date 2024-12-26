@@ -12,7 +12,7 @@ const LoginPage = () => {
   const navigate = useNavigate();
   useEffect(() => {
     if (jwtCheck()) {
-      navigate("/");
+      navigate("/home");
     }
   }, [navigate]);
 

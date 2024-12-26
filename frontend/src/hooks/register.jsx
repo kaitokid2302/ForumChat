@@ -10,22 +10,22 @@ const useRegister = () => {
   const { setRegisterSuccess } = useContext(AuthContext);
 
   const register = async (username, password) => {
-    setLoading(true);
     setError(null);
     try {
+      setLoading(true);
       const res = await registerRequest({ username, password });
       if (res.code == 400) {
         throw new Error(res.message);
       }
       setRegisterSuccess(true);
-      setLoading(true);
       setTimeout(() => {
         navigate("/login");
-      }, 1000);
+      }, 1700);
     } catch (error) {
-      setError(error.message);
-    } finally {
-      setLoading(false);
+      setTimeout(() => {
+        setError(error.message);
+        setLoading(false);
+      }, 1700);
     }
   };
 

@@ -1,8 +1,9 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import global from "../config/config.js";
 import { AuthProvider } from "../context/auth.jsx";
-import { LoginPage } from "../pages/Auth/index.js";
-import RegisterPage from "../pages/Auth/RegisterPage.jsx";
+import { MainLayout } from "../layout/Main.jsx";
+import { LoginPage } from "../pages/auth/index.js";
+import RegisterPage from "../pages/auth/RegisterPage.jsx";
 import { HomePage } from "../pages/home/index.js";
 
 const AppRoute = () => {
@@ -10,6 +11,7 @@ const AppRoute = () => {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/" element={<Navigate to="/home" replace />}></Route>
         <Route
           path="/login"
           element={
@@ -26,7 +28,14 @@ const AppRoute = () => {
             </AuthProvider>
           }
         />
-        <Route path="/" element={<HomePage />} />
+        <Route
+          path="/home"
+          element={
+            <MainLayout>
+              <HomePage />
+            </MainLayout>
+          }
+        />
       </Routes>
     </BrowserRouter>
   );

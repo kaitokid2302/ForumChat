@@ -19,7 +19,7 @@ const useLogin = () => {
         throw new Error("Login failed");
       }
       setJwt(token);
-      navigate("/");
+      navigate("/home");
     } catch (error) {
       setError(error.message);
     } finally {
