@@ -18,7 +18,10 @@ const useRegister = () => {
         throw new Error(res.message);
       }
       setRegisterSuccess(true);
-      navigate("/login");
+      setLoading(true);
+      setTimeout(() => {
+        navigate("/login");
+      }, 1000);
     } catch (error) {
       setError(error.message);
     } finally {
