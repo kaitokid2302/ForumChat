@@ -1,7 +1,7 @@
 import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AuthContext } from "../context/auth.jsx";
-import { registerRequest } from "../services/api/auth";
+import { AuthContext } from "../../context/auth/auth.jsx";
+import { registerRequest } from "../../services/api/auth.js";
 
 const useRegister = () => {
   const [loading, setLoading] = useState(false);

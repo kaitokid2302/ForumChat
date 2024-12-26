@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { loginRequest } from "../services/api/auth.js";
-import { setJwt } from "../services/auth/jwt.js";
+import { loginRequest } from "../../services/api/auth.js";
+import { setJwt } from "../../services/auth/jwt.js";
 
 const useLogin = () => {
   const [loading, setLoading] = useState(false);
