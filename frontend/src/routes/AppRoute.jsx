@@ -1,6 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import global from "../config/config.js";
-import { AuthProvider } from "../context/auth.jsx";
+import { AuthProvider } from "../context/auth/auth.jsx";
 import { MainLayout } from "../layout/Main.jsx";
 import { LoginPage } from "../pages/auth/index.js";
 import RegisterPage from "../pages/auth/RegisterPage.jsx";
