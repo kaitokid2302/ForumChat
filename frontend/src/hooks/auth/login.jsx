@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginRequest } from "../../services/api/auth.js";
-import { setJwt } from "../../services/auth/jwt.js";
+import { setAuth } from "../../services/auth/jwt.js";
 
 const useLogin = () => {
   const [loading, setLoading] = useState(false);
@@ -13,12 +13,12 @@ const useLogin = () => {
     setError(null);
     try {
       const response = await loginRequest({ username, password });
-      const token = response.data;
+      const token = response.data.token;
       if (!token) {
         setError("Login failed");
         throw new Error("Login failed");
       }
-      setJwt(token);
+      setAuth(token, response.data.userID);
       navigate("/home");
     } catch (error) {
       setError(error.message);

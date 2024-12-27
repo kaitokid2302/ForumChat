@@ -1,4 +1,5 @@
 import global from "../../config/config.js";
+import { api } from "./interceptor.js";
 
 export const loginRequest = async (data) => {
   const response = await fetch(global.host + "/user/login", {

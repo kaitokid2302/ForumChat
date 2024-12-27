@@ -2,6 +2,7 @@ package message
 
 import (
 	"errors"
+	"time"
 
 	"ForumChat/internal/infrastructure/database"
 	"gorm.io/gorm"
@@ -11,6 +12,7 @@ type MessageRepostiory interface {
 	GetMessagesByGroupID(groupID int, size int, offset int) (*[]database.Message, error)
 	SaveMessage(groupID int, userID int, text string) error
 	MarkRead(groupID int, userID int, messageID int) error
+	CountUnreadMessage(groupID int, userID int, at time.Time) (int, error)
 }
 
 type messageRepositoryImpl struct {
@@ -23,6 +25,17 @@ func (s *messageRepositoryImpl) GetMessagesByGroupID(groupID int, size int, offs
 		return nil, err
 	}
 	return &messages, nil
+}
+
+func (s *messageRepositoryImpl) CountUnreadMessage(groupID int, userID int, at time.Time) (int, error) {
+	var count int64
+	res := s.db.Debug().Table("messages").
+		Where("group_id = ? and created_at > ?", groupID, at).
+		Count(&count)
+	if res.Error != nil {
+		return 0, res.Error
+	}
+	return int(count), nil
 }
 
 func NewMessageRepository(db *gorm.DB) MessageRepostiory {

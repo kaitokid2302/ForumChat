@@ -155,6 +155,27 @@ func (h *GroupHandler) GetAllGroups(c *gin.Context) {
 	return
 }
 
+func (h *GroupHandler) CountUnreadMessage(c *gin.Context) {
+	groupIDString := c.Param("groupID")
+	groupID, er := strconv.Atoi(groupIDString)
+	if er != nil {
+		response.ReponseOutput(c, response.Fail, er.Error(), nil)
+		return
+	}
+	userIDString := c.Param("userID")
+	userID, er := strconv.Atoi(userIDString)
+	if er != nil {
+		response.ReponseOutput(c, response.Fail, er.Error(), nil)
+		return
+	}
+	count, er := h.GroupService.CountUnreadMessage(c, groupID, userID)
+	if er != nil {
+		response.ReponseOutput(c, response.Fail, er.Error(), nil)
+		return
+	}
+	response.ReponseOutput(c, response.Success, "", count)
+}
+
 // /group/new?name=: create new group
 
 // /groupd/rename?name=: rename group

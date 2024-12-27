@@ -1,11 +1,13 @@
 import { jwtDecode } from "jwt-decode";
 
-export const setJwt = (jwt) => {
+export const setAuth = (jwt, userID) => {
   localStorage.setItem("token", jwt);
+  localStorage.setItem("userID", userID);
 };
 
 export const deleteJwt = () => {
   localStorage.removeItem("token");
+  localStorage.removeItem("userID");
 };
 
 export const futureLogout = () => {
@@ -26,6 +28,12 @@ export const jwtCheck = () => {
       const exp = jwtDecode(token).exp;
       const now = Date.now().valueOf() / 1000;
       if (now > exp) {
+        deleteJwt();
+        return false;
+      }
+      let userIDlocal = localStorage.getItem("userID");
+      let userIDjwt = jwtDecode(token).userID;
+      if (userIDlocal !== userIDjwt) {
         deleteJwt();
         return false;
       }

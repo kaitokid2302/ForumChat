@@ -19,6 +19,10 @@ func NewAuth(jwtService jwt.JWTservice) *Auth {
 func (a *Auth) JWTverify() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := c.GetHeader("Authorization")
+		tokenQuery := c.Query("token")
+		if token == "" {
+			token = tokenQuery
+		}
 		if token == "" {
 			response.ReponseOutput(c, response.JWTVerifyFail, "", nil)
 			c.Abort()

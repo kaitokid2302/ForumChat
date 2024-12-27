@@ -11,7 +11,7 @@ import (
 
 type UserService interface {
 	RegisterUser(c *gin.Context, request request.RegisterRequest) error
-	LoginUser(c *gin.Context, registerRequest request.LoginRequest) (string, error)
+	LoginUser(c *gin.Context, registerRequest request.LoginRequest) (string, uint, error)
 }
 
 type userServiceImpl struct {
@@ -37,21 +37,21 @@ func (s *userServiceImpl) RegisterUser(c *gin.Context, request request.RegisterR
 	return s.UserRepository.InsertUser(request.Username, request.Password)
 }
 
-func (s *userServiceImpl) LoginUser(c *gin.Context, registerRequest request.LoginRequest) (string, error) {
+func (s *userServiceImpl) LoginUser(c *gin.Context, registerRequest request.LoginRequest) (string, uint, error) {
 	exist, er := s.UserRepository.ExistUserByUsername(registerRequest.Username)
 	if er != nil {
-		return "", er
+		return "", 0, er
 	}
 	if !exist {
-		return "", errors.New("username not exist")
+		return "", 0, errors.New("username not exist")
 	}
 	loginBool, er, user := s.UserRepository.Login(registerRequest.Username, registerRequest.Password)
 	if er != nil {
-		return "", er
+		return "", 0, er
 	}
 	if !loginBool {
-		return "", errors.New("password not correct")
+		return "", 0, errors.New("password not correct")
 	}
 	token := s.JWTservice.CreateToken(registerRequest.Username, int(user.ID))
-	return token, nil
+	return token, user.ID, nil
 }

@@ -18,6 +18,7 @@ type GroupService interface {
 	GetUsersInAGroup(c *gin.Context, groupID int) (*[]database.User, error)
 	MarkRead(c *gin.Context, groupID int, userID int, messageID int) error
 	GetAllGroups(c *gin.Context, size int, offset int) (*[]database.Group, error)
+	CountUnreadMessage(c *gin.Context, groupID int, userID int) (int, error)
 }
 
 type groupServiceImpl struct {
@@ -28,6 +29,18 @@ type groupServiceImpl struct {
 
 func (s *groupServiceImpl) GetAllGroups(c *gin.Context, size int, offset int) (*[]database.Group, error) {
 	return s.GroupRepostiory.GetAllGroups(size, offset)
+}
+
+func (s *groupServiceImpl) CountUnreadMessage(c *gin.Context, groupID int, userID int) (int, error) {
+	// get last read message
+	lastReadMessage, er := s.GroupRepostiory.GetLastReadMessage(groupID, userID)
+
+	// count created_at > last_read_message.created_at
+	count, er := s.MessageRepostiory.CountUnreadMessage(groupID, userID, lastReadMessage.CreatedAt)
+	if er != nil {
+		return 0, er
+	}
+	return count, nil
 }
 
 func (s *groupServiceImpl) GetUsersInAGroup(c *gin.Context, groupID int) (*[]database.User, error) {
@@ -94,7 +107,7 @@ func (s *groupServiceImpl) HandleMessage(m *melody.Session, msg []byte) {
 			return
 		}
 		// write back to client
-		m.Write(msg)
+		s.melody.Broadcast(msg)
 		return
 	}
 	if payload.Type == "create" {
@@ -107,7 +120,7 @@ func (s *groupServiceImpl) HandleMessage(m *melody.Session, msg []byte) {
 		// write back to client
 		payload.GroupID = groupID
 		msg, _ := json.Marshal(payload)
-		m.Write(msg)
+		s.melody.Broadcast(msg)
 		return
 	}
 	// update name
@@ -120,7 +133,7 @@ func (s *groupServiceImpl) HandleMessage(m *melody.Session, msg []byte) {
 			return
 		}
 		// write back to client
-		m.Write(msg)
+		s.melody.Broadcast(msg)
 		return
 	}
 	// join
@@ -133,7 +146,7 @@ func (s *groupServiceImpl) HandleMessage(m *melody.Session, msg []byte) {
 			return
 		}
 		// write back to client
-		m.Write(msg)
+		s.melody.Broadcast(msg)
 		return
 	}
 
@@ -145,7 +158,7 @@ func (s *groupServiceImpl) HandleMessage(m *melody.Session, msg []byte) {
 			return
 		}
 		// write back to client
-		m.Write(msg)
+		s.melody.Broadcast(msg)
 		return
 
 	}

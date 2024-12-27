@@ -37,10 +37,14 @@ func (h *UserHandler) LoginUser(c *gin.Context) {
 		response.ReponseOutput(c, response.Fail, er.Error(), nil)
 		return
 	}
-	token, er := h.UserService.LoginUser(c, input)
+	token, userID, er := h.UserService.LoginUser(c, input)
 	if er != nil {
 		response.ReponseOutput(c, response.Fail, er.Error(), nil)
 		return
 	}
-	response.ReponseOutput(c, response.Success, "", token)
+	response.ReponseOutput(c, response.Success, "", gin.H{
+		"token":  token,
+		"userID": userID,
+	})
+
 }
