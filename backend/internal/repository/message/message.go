@@ -13,10 +13,19 @@ type MessageRepostiory interface {
 	SaveMessage(groupID int, userID int, text string) error
 	MarkRead(groupID int, userID int, messageID int) error
 	CountUnreadMessage(groupID int, userID int, at time.Time) (int, error)
+	GetMessagesAfterMessageID(groupID int, messageID int) (*[]database.Message, error)
 }
 
 type messageRepositoryImpl struct {
 	db *gorm.DB
+}
+
+func (s *messageRepositoryImpl) GetMessagesAfterMessageID(groupID int, messageID int) (*[]database.Message, error) {
+	var messages []database.Message
+	if err := s.db.Where("group_id = ? and id > ?", groupID, messageID).Order("created_at desc").Find(&messages).Error; err != nil {
+		return nil, err
+	}
+	return &messages, nil
 }
 
 func (s *messageRepositoryImpl) GetMessagesByGroupID(groupID int, size int, offset int) (*[]database.Message, error) {

@@ -30,12 +30,7 @@ func (h *GroupHandler) MarkRead(c *gin.Context) {
 		response.ReponseOutput(c, response.Fail, er.Error(), nil)
 		return
 	}
-	userIDString := c.Param("userID")
-	userID, er := strconv.Atoi(userIDString)
-	if er != nil {
-		response.ReponseOutput(c, response.Fail, er.Error(), nil)
-		return
-	}
+	userID := c.GetInt("userID")
 	messageIDString := c.Param("messageID")
 	messageID, er := strconv.Atoi(messageIDString)
 	if er != nil {
@@ -66,14 +61,9 @@ func (h *GroupHandler) GetAllUsersInAGroup(c *gin.Context) {
 	response.ReponseOutput(c, response.Success, "", users)
 }
 
-// /group/:userID: get all groups of a user
+// /group/user
 func (h *GroupHandler) GetAllGroupsByUserID(c *gin.Context) {
-	userIDString := c.Param("userID")
-	userID, er := strconv.Atoi(userIDString)
-	if er != nil {
-		response.ReponseOutput(c, response.Fail, er.Error(), nil)
-		return
-	}
+	userID := c.GetInt("userID")
 	group, er := h.GroupService.GetGroupsByUserID(c, userID)
 	if er != nil {
 		response.ReponseOutput(c, response.Fail, er.Error(), nil)
@@ -112,12 +102,7 @@ func (h *GroupHandler) GetLastReadMessage(c *gin.Context) {
 		response.ReponseOutput(c, response.Fail, er.Error(), nil)
 		return
 	}
-	userIDString := c.Param("userID")
-	userID, er := strconv.Atoi(userIDString)
-	if er != nil {
-		response.ReponseOutput(c, response.Fail, er.Error(), nil)
-		return
-	}
+	userID := c.GetInt("userID")
 	message, er := h.GroupService.GetLastReadMessage(c, groupID, userID)
 	if er != nil {
 		response.ReponseOutput(c, response.Fail, er.Error(), nil)
@@ -162,18 +147,28 @@ func (h *GroupHandler) CountUnreadMessage(c *gin.Context) {
 		response.ReponseOutput(c, response.Fail, er.Error(), nil)
 		return
 	}
-	userIDString := c.Param("userID")
-	userID, er := strconv.Atoi(userIDString)
-	if er != nil {
-		response.ReponseOutput(c, response.Fail, er.Error(), nil)
-		return
-	}
+	userID := c.GetInt("userID")
 	count, er := h.GroupService.CountUnreadMessage(c, groupID, userID)
 	if er != nil {
 		response.ReponseOutput(c, response.Fail, er.Error(), nil)
 		return
 	}
 	response.ReponseOutput(c, response.Success, "", count)
+}
+
+func (h *GroupHandler) GetAllMessageUnread(c *gin.Context) {
+	groupIDString := c.Param("groupID")
+	groupID, er := strconv.Atoi(groupIDString)
+	if er != nil {
+		response.ReponseOutput(c, response.Fail, er.Error(), nil)
+		return
+	}
+	message, er := h.GroupService.GetAllMessageUnread(c, groupID)
+	if er != nil {
+		response.ReponseOutput(c, response.Fail, er.Error(), nil)
+		return
+	}
+	response.ReponseOutput(c, response.Success, "", message)
 }
 
 // /group/new?name=: create new group

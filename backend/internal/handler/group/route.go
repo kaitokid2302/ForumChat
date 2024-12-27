@@ -3,12 +3,13 @@ package group
 import "github.com/gin-gonic/gin"
 
 func (h *GroupHandler) InitRoute(r *gin.RouterGroup) {
-	r.GET("/user/:userID", h.GetAllGroupsByUserID)
+	r.GET("/user", h.GetAllGroupsByUserID)
 	r.GET("/group/:groupID", h.GetMessagesByGroupID)
-	r.GET("/group/:groupID/:userID", h.GetLastReadMessage)
-	r.GET("/group/:groupID/:userID", h.CountUnreadMessage)
+	r.GET("/group/:groupID", h.GetLastReadMessage)
+	r.GET("/group/count/:groupID", h.CountUnreadMessage)
 	r.GET("/ws", h.UpgradeWebsocket)
 	r.GET("/users", h.GetAllUsersInAGroup)
-	r.GET("/markread/group/:groupID/user/:userID/message/:messageID", h.MarkRead)
+	r.GET("/markread/group/:groupID/message/:messageID", h.MarkRead)
 	r.GET("/all", h.GetAllGroups)
+	r.GET("/group/message/:groupID", h.GetAllMessageUnread)
 }

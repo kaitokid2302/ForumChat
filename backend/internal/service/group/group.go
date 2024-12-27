@@ -19,6 +19,7 @@ type GroupService interface {
 	MarkRead(c *gin.Context, groupID int, userID int, messageID int) error
 	GetAllGroups(c *gin.Context, size int, offset int) (*[]database.Group, error)
 	CountUnreadMessage(c *gin.Context, groupID int, userID int) (int, error)
+	GetAllMessageUnread(c *gin.Context, groupID int) (*[]database.Message, error)
 }
 
 type groupServiceImpl struct {
@@ -31,6 +32,15 @@ func (s *groupServiceImpl) GetAllGroups(c *gin.Context, size int, offset int) (*
 	return s.GroupRepostiory.GetAllGroups(size, offset)
 }
 
+func (s *groupServiceImpl) GetAllMessageUnread(c *gin.Context, groupID int) (*[]database.Message, error) {
+	// get last read message
+	userID := c.GetInt("userID")
+	lastReadMessage, er := s.GetLastReadMessage(c, groupID, userID)
+	if er != nil {
+		return nil, er
+	}
+	return s.MessageRepostiory.GetMessagesAfterMessageID(groupID, int(lastReadMessage.ID))
+}
 func (s *groupServiceImpl) CountUnreadMessage(c *gin.Context, groupID int, userID int) (int, error) {
 	// get last read message
 	lastReadMessage, er := s.GroupRepostiory.GetLastReadMessage(groupID, userID)

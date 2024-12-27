@@ -10,8 +10,7 @@ export const useGroupJoinedWS = () => {
   useEffect(() => {
     const fetchJoinedGroups = async () => {
       try {
-        const userID = localStorage.getItem("userID"); // hoặc lấy từ context nếu có
-        const response = await getJoinedGroups(userID);
+        const response = await getJoinedGroups();
         setGroupJoined(response.data);
       } catch {
         openNotification("Error", "Failed to fetch joined groups");
