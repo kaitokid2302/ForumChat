@@ -83,9 +83,21 @@ func (s *messageServiceImpl) HandleMessage(m *melody.Session, msg []byte) {
 	}
 	// save to db
 	er = s.MessageRepostiory.SaveMessage(payload.GroupID, payload.UserID, payload.Text)
+	lastestMessage, er2 := s.GetMessagesByGroupID(nil, payload.GroupID, 1, 0)
+	if er2 != nil {
+		m.Write([]byte("can not get lastest message"))
+		return
+	}
 	if er != nil {
 		m.Write([]byte("can not send message"))
 		return
 	}
+	newMsg := websocket.MessageMessage{
+		UserID:    payload.UserID,
+		Text:      payload.Text,
+		GroupID:   payload.GroupID,
+		MessageID: int((*lastestMessage)[0].ID),
+	}
+	msg, _ = json.Marshal(newMsg)
 	s.melody.Broadcast(msg)
 }

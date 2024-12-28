@@ -1,8 +1,7 @@
 // components/JoinedGroup.jsx
 import { PlusOutlined, SearchOutlined } from "@ant-design/icons";
 import { Button, Input, List, Modal, Skeleton } from "antd";
-import { useCallback } from "react";
-import { memo, useContext } from "React";
+import { memo, useCallback, useContext } from "react";
 import { HomeContext } from "../../../context/home/home.jsx";
 import { useGroupSearch } from "../../../hooks/home/groupJoinedHook.js";
 import { Group } from "./Group.jsx"; // Thêm memo

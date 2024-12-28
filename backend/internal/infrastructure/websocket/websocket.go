@@ -3,9 +3,10 @@ package websocket
 import "github.com/olahol/melody"
 
 type MessageMessage struct {
-	UserID  int    `json:"user_id"`
-	Text    string `json:"text"`
-	GroupID int    `json:"group_id"`
+	UserID    int    `json:"user_id"`
+	Text      string `json:"text"`
+	GroupID   int    `json:"group_id"`
+	MessageID int    `json:"message_id"`
 }
 
 func InitMelody() *melody.Melody {

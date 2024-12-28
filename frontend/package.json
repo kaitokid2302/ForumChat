@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@ant-design/icons": "^5.5.2",
     "@react-buddy/ide-toolbox": "^2.4.0",
     "antd": "^5.22.6",
     "axios": "^1.7.9",
@@ -17,6 +18,7 @@
     "jwt-decode": "^4.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-infinite-scroll-component": "^6.1.0",
     "react-router-dom": "^7.1.0"
   },
   "devDependencies": {

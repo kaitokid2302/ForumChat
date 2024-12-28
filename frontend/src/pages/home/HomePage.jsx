@@ -6,7 +6,7 @@ import { NotJoinedGroup } from "./components/NotJoinedGroup.js";
 export default function HomePage() {
   return (
     <HomeProvider>
-      <div className={"w-full flex"}>
+      <div className="w-full h-full flex">
         <JoinedGroup />
         <Messages />
         <NotJoinedGroup />

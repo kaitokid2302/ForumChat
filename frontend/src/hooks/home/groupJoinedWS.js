@@ -1,6 +1,6 @@
 import { useContext, useEffect } from "react";
 import { HomeContext } from "../../context/home/home.jsx";
-import { getJoinedGroups } from "../../services/api/group.js";
+import { getJoinedGroups } from "../../services/api/api.js";
 
 export const useGroupJoinedWS = () => {
   const { groupJoined, setGroupJoined, openNotification } =

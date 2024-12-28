@@ -5,7 +5,7 @@ import global from "../../config/config.js";
 import {
   countUnreadMessage,
   getAllJoinedGroups,
-} from "../../services/api/group.js";
+} from "../../services/api/api.js";
 
 export const HomeContext = createContext();
 
@@ -23,6 +23,46 @@ export const HomeProvider = ({ children }) => {
       duration: 2,
     });
   };
+
+  const messageWsRef = useRef(null);
+  // Setup WebSockets
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    // Group WebSocket
+    const groupWs = new WebSocket(`${global.host}/group/ws?token=${token}`);
+    groupWsRef.current = groupWs;
+
+    groupWs.onopen = () => {
+      console.log("Group WebSocket connected");
+    };
+
+    // Message WebSocket
+    const messageWs = new WebSocket(`${global.host}/message/ws?token=${token}`);
+    messageWsRef.current = messageWs;
+
+    messageWs.onopen = () => {
+      console.log("Message WebSocket connected");
+    };
+
+    messageWs.onclose = () => {
+      console.log("Message WebSocket disconnected");
+    };
+
+    messageWs.onerror = (error) => {
+      console.error("Message WebSocket error:", error);
+    };
+
+    return () => {
+      if (groupWsRef.current) {
+        groupWsRef.current.close();
+      }
+      if (messageWsRef.current) {
+        messageWsRef.current.close();
+      }
+    };
+  }, []);
 
   const handleSelectGroup = useCallback((groupId) => {
     setActiveGroupId(groupId);
@@ -364,6 +404,7 @@ export const HomeProvider = ({ children }) => {
         handleCreate,
         activeGroupId,
         handleSelectGroup,
+        messageWs: messageWsRef.current,
       }}
     >
       {contextHolder}
