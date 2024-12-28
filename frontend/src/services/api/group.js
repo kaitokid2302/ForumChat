@@ -1,52 +1,62 @@
+// func (h *GroupHandler) InitRoute(r *gin.RouterGroup) {
+//     r.GET("/group/joined", h.GetAllGroupsByUserID)
+//     r.GET("/group/group/:groupID/messages", h.GetMessagesByGroupID)
+//     r.GET("/group/group/:groupID", h.GetLastReadMessage)
+//     r.GET("/group/group/count/:groupID", h.CountUnreadMessage)
+//     r.GET("/group/users", h.GetAllUsersInAGroup)
+//     r.GET("/group/markread/group/:groupID/message/:messageID", h.MarkRead)
+//     r.GET("/group/all", h.GetAllGroups)
+//     r.GET("/group/group/message/:groupID", h.GetAllMessageUnread)
+//     r.GET("/group/unjoined", h.GetAllUnjoinedGroup)
+// }
+
 import { api } from "./interceptor.js";
 
-export const getJoinedGroups = async () => {
-  const userID = localStorage.getItem("userID");
-  const response = await api.get(`/group/${userID}`);
-  return response.data;
+export const getAllJoinedGroups = async () => {
+  const res = await api.get("/group/joined");
+  return res.data;
 };
 
-// r.GET("/group/group/:groupID", h.GetMessagesByGroupID)
-export const getAllMessagesByGroupID = async (groupID) => {
-  const response = await api.get(`/group/group/${groupID}`);
-  return response.data;
+export const getMessagesByGroupID = async (groupID, size, offset) => {
+  const res = await api.get(
+    `/group/group/${groupID}/messages?size=${size}&offset=${offset}`,
+  );
+  return res.data;
 };
-
-// r.GET("/group/group/:groupID", h.GetLastReadMessage)
-// 	r.GET("/group/group/count/:groupID", h.CountUnreadMessage)
-// 	r.GET("/group/users", h.GetAllUsersInAGroup)
-// r.GET("/markread/group/:groupID/message/:messageID", h.MarkRead)
-// 	r.GET("/group/all", h.GetAllGroups)
-// 	r.GET("/group/group/message/:groupID", h.GetAllMessageUnread)
 
 export const getLastReadMessage = async (groupID) => {
-  const response = await api.get(`/group/group/${groupID}`);
-  return response.data;
+  const res = await api.get(`/group/group/${groupID}`);
+  return res.data;
 };
 
 export const countUnreadMessage = async (groupID) => {
-  const response = await api.get(`/group/group/count/${groupID}`);
-  return response.data;
+  const res = await api.get(`/group/group/count/${groupID}`);
+  return res.data;
 };
 
-export const getAllUsersInAGroup = async () => {
-  const response = await api.get(`/group/users`);
-  return response.data;
+export const getAllUsersInAGroup = async (groupID) => {
+  const res = await api.get(`/group/users?groupID=${groupID}`);
+  return res.data;
 };
 
 export const markRead = async (groupID, messageID) => {
-  const response = await api.get(
-    `/markread/group/${groupID}/message/${messageID}`,
+  const res = await api.get(
+    `/group/markread/group/${groupID}/message/${messageID}`,
   );
-  return response.data;
+  return res.data;
 };
 
 export const getAllGroups = async () => {
-  const response = await api.get(`/group/all`);
-  return response.data;
+  const res = await api.get("/group/all");
+  return res.data;
 };
 
 export const getAllMessageUnread = async (groupID) => {
-  const response = await api.get(`/group/group/message/${groupID}`);
-  return response.data;
+  const res = await api.get(`/group/group/message/${groupID}`);
+  return res.data;
+};
+
+export const getAllUnjoinedGroups = async () => {
+  const res = await api.get("/group/unjoined");
+  return res.data;
 };

@@ -17,6 +17,8 @@ type GroupRepostiory interface {
 	LeaveGroup(groupID int, userID int) error
 	GetUsersInAGroup(groupID int) (*[]database.User, error)
 	GetAllGroups(size int, offset int) (*[]database.Group, error)
+	GetUnjoinedGroup(userID int) (*[]database.Group, error)
+	GetLastMessage(groupID int) (*database.Message, error)
 }
 
 type groupRepositoryImp struct {
@@ -26,6 +28,24 @@ type groupRepositoryImp struct {
 func (s *groupRepositoryImp) GetAllGroups(size int, offset int) (*[]database.Group, error) {
 	var groups []database.Group
 	if err := s.db.Limit(size).Offset(offset).Find(&groups).Error; err != nil {
+		return nil, err
+	}
+	return &groups, nil
+}
+
+func (s *groupRepositoryImp) GetLastMessage(groupID int) (*database.Message, error) {
+	// sort by created_at desc
+	var message database.Message
+	if err := s.db.Where("group_id = ?", groupID).Order("created_at desc").First(&message).Error; err != nil {
+		return nil, err
+	}
+	return &message, nil
+}
+
+func (s *groupRepositoryImp) GetUnjoinedGroup(userID int) (*[]database.Group, error) {
+	// join not in groups and user_groups and groups.deleted_at is null
+	var groups []database.Group = make([]database.Group, 0)
+	if err := s.db.Raw("select * from groups where id not in (select group_id from user_groups where user_id = ?) and deleted_at is null", userID).Scan(&groups).Error; err != nil {
 		return nil, err
 	}
 	return &groups, nil

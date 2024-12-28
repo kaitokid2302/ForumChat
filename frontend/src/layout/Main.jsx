@@ -5,7 +5,7 @@ import { useLogout } from "../hooks/layout/mainLayout.js";
 export const MainLayout = ({ children }) => {
   const { logout } = useLogout();
   return (
-    <div>
+    <div className={"h-screen overflow-hidden"}>
       <div className="w-full text-right">
         {/*    logoutbutton*/}
         <Button color="danger" variant="solid" className="m-2" onClick={logout}>

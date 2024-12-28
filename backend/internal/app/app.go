@@ -1,6 +1,8 @@
 package app
 
 import (
+	"time"
+
 	group3 "ForumChat/internal/handler/group"
 	message3 "ForumChat/internal/handler/message"
 	user3 "ForumChat/internal/handler/user"
@@ -24,7 +26,15 @@ func Run() {
 	config.InitAll()
 	db := database.InitDatabase()
 	r := gin.Default()
-	r.Use(cors.Default())
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"}, // Thêm origin của frontend
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
+
 	melodyMessageService := websocket.InitMelody()
 	melodyGroupService := websocket.InitMelody()
 
@@ -53,7 +63,5 @@ func Run() {
 	messageHandler.InitRoute(messageGroup)
 	groupHandler.InitRoute(groupGroup)
 
-	// cors accept
-	r.Use(cors.Default())
 	r.Run(":8080")
 }

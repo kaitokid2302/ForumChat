@@ -17,4 +17,5 @@ type GroupMessage struct {
 	Type    string `json:"type"` // delete, create, update
 	Name    string `json:"name"`
 	GroupID int    `json:"group_id"`
+	UserID  int    `json:"user_id"`
 }

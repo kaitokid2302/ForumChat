@@ -170,6 +170,15 @@ func (h *GroupHandler) GetAllMessageUnread(c *gin.Context) {
 	}
 	response.ReponseOutput(c, response.Success, "", message)
 }
+func (h *GroupHandler) GetAllUnjoinedGroup(c *gin.Context) {
+	userID := c.GetInt("userID")
+	groups, er := h.GroupService.GetUnjoinedGroup(c, userID)
+	if er != nil {
+		response.ReponseOutput(c, response.Fail, er.Error(), nil)
+		return
+	}
+	response.ReponseOutput(c, response.Success, "", groups)
+}
 
 // /group/new?name=: create new group
 

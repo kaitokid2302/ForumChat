@@ -20,6 +20,7 @@ type GroupService interface {
 	GetAllGroups(c *gin.Context, size int, offset int) (*[]database.Group, error)
 	CountUnreadMessage(c *gin.Context, groupID int, userID int) (int, error)
 	GetAllMessageUnread(c *gin.Context, groupID int) (*[]database.Message, error)
+	GetUnjoinedGroup(c *gin.Context, userID int) (*[]database.Group, error)
 }
 
 type groupServiceImpl struct {
@@ -30,6 +31,10 @@ type groupServiceImpl struct {
 
 func (s *groupServiceImpl) GetAllGroups(c *gin.Context, size int, offset int) (*[]database.Group, error) {
 	return s.GroupRepostiory.GetAllGroups(size, offset)
+}
+
+func (s *groupServiceImpl) GetUnjoinedGroup(c *gin.Context, userID int) (*[]database.Group, error) {
+	return s.GroupRepostiory.GetUnjoinedGroup(userID)
 }
 
 func (s *groupServiceImpl) GetAllMessageUnread(c *gin.Context, groupID int) (*[]database.Message, error) {
@@ -44,6 +49,9 @@ func (s *groupServiceImpl) GetAllMessageUnread(c *gin.Context, groupID int) (*[]
 func (s *groupServiceImpl) CountUnreadMessage(c *gin.Context, groupID int, userID int) (int, error) {
 	// get last read message
 	lastReadMessage, er := s.GroupRepostiory.GetLastReadMessage(groupID, userID)
+	if lastReadMessage == nil {
+		return 0, nil
+	}
 
 	// count created_at > last_read_message.created_at
 	count, er := s.MessageRepostiory.CountUnreadMessage(groupID, userID, lastReadMessage.CreatedAt)
@@ -117,6 +125,14 @@ func (s *groupServiceImpl) HandleMessage(m *melody.Session, msg []byte) {
 			return
 		}
 		// write back to client
+		var addUserID websocket.GroupMessage
+		er = json.Unmarshal(msg, &addUserID)
+		if er != nil {
+			m.Write([]byte(er.Error()))
+			return
+		}
+		addUserID.UserID = userID
+		msg, _ := json.Marshal(addUserID)
 		s.melody.Broadcast(msg)
 		return
 	}
@@ -129,6 +145,7 @@ func (s *groupServiceImpl) HandleMessage(m *melody.Session, msg []byte) {
 		}
 		// write back to client
 		payload.GroupID = groupID
+		payload.UserID = userID
 		msg, _ := json.Marshal(payload)
 		s.melody.Broadcast(msg)
 		return
@@ -143,6 +160,14 @@ func (s *groupServiceImpl) HandleMessage(m *melody.Session, msg []byte) {
 			return
 		}
 		// write back to client
+		var addUserID websocket.GroupMessage
+		er = json.Unmarshal(msg, &addUserID)
+		if er != nil {
+			m.Write([]byte(er.Error()))
+			return
+		}
+		addUserID.UserID = userID
+		msg, _ := json.Marshal(addUserID)
 		s.melody.Broadcast(msg)
 		return
 	}
@@ -155,6 +180,28 @@ func (s *groupServiceImpl) HandleMessage(m *melody.Session, msg []byte) {
 			m.Write([]byte(er.Error()))
 			return
 		}
+		// last message, then mark read this message
+
+		lastMessage, er := s.GroupRepostiory.GetLastMessage(payload.GroupID)
+		if er != nil {
+			// write back to client
+			m.Write([]byte(er.Error()))
+			return
+		}
+		er = s.MessageRepostiory.MarkRead(payload.GroupID, userID, int(lastMessage.ID))
+		if er != nil {
+			// write back to client
+			m.Write([]byte(er.Error()))
+			return
+		}
+		var addUserID websocket.GroupMessage
+		er = json.Unmarshal(msg, &addUserID)
+		if er != nil {
+			m.Write([]byte(er.Error()))
+			return
+		}
+		addUserID.UserID = userID
+		msg, _ := json.Marshal(addUserID)
 		// write back to client
 		s.melody.Broadcast(msg)
 		return
@@ -168,6 +215,14 @@ func (s *groupServiceImpl) HandleMessage(m *melody.Session, msg []byte) {
 			return
 		}
 		// write back to client
+		var addUserID websocket.GroupMessage
+		er = json.Unmarshal(msg, &addUserID)
+		if er != nil {
+			m.Write([]byte(er.Error()))
+			return
+		}
+		addUserID.UserID = userID
+		msg, _ := json.Marshal(addUserID)
 		s.melody.Broadcast(msg)
 		return
 
