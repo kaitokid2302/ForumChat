@@ -2,6 +2,7 @@ package group
 
 import (
 	"encoding/json"
+	"errors"
 
 	"ForumChat/internal/infrastructure/database"
 	"ForumChat/internal/infrastructure/websocket"
@@ -9,6 +10,7 @@ import (
 	"ForumChat/internal/repository/message"
 	"github.com/gin-gonic/gin"
 	"github.com/olahol/melody"
+	"gorm.io/gorm"
 )
 
 type GroupService interface {
@@ -66,6 +68,18 @@ func (s *groupServiceImpl) GetUsersInAGroup(c *gin.Context, groupID int) (*[]dat
 }
 
 func (s *groupServiceImpl) MarkRead(c *gin.Context, groupID int, userID int, messageID int) error {
+	// if already read id > messageID, then return
+	lastReadMessage, er := s.GroupRepostiory.GetLastReadMessage(groupID, userID)
+	if errors.Is(er, gorm.ErrRecordNotFound) {
+		return nil
+	}
+	if er != nil {
+		return er
+	}
+	if lastReadMessage != nil && int(lastReadMessage.ID) > messageID {
+		return nil
+	}
+	// mark read
 	return s.MessageRepostiory.MarkRead(groupID, userID, messageID)
 }
 

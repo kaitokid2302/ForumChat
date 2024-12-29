@@ -13,7 +13,7 @@ export const MainLayout = ({ children }) => {
       </div>
 
       {/* Main content area */}
-      <div className="flex-1">{children}</div>
+      <div className="flex-1 overflow-hidden">{children}</div>
     </div>
   );
 };

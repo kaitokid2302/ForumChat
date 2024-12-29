@@ -1,11 +1,9 @@
-// components/Messages.jsx
 import { SendOutlined } from "@ant-design/icons";
 import { Button, Input, List, Spin } from "antd";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { HomeContext } from "../../../context/home/home.jsx";
 import { useMessages } from "../../../hooks/home/messageWS.js";
-
 import { MessageCard } from "./MessageCard";
 
 export const Messages = () => {
@@ -20,11 +18,23 @@ export const Messages = () => {
     newMessage,
     setNewMessage,
     handleSendMessage,
-    messagesEndRef,
+    latestMessageRef,
+    messageObserver,
   } = useMessages();
 
   const activeGroup = joinedGroups.find((g) => g.id === activeGroupId);
 
+  // Scroll to latest message when messages change
+  useEffect(() => {
+    if (latestMessageRef.current) {
+      latestMessageRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "end",
+      });
+    }
+  }, [messages]);
+
+  // Handle no active group
   if (!activeGroupId) {
     return (
       <div className="flex-1 flex items-center justify-center text-gray-500">
@@ -33,6 +43,7 @@ export const Messages = () => {
     );
   }
 
+  // Handle error state
   if (error) {
     return (
       <div className="flex-1 flex items-center justify-center text-red-500">
@@ -59,18 +70,36 @@ export const Messages = () => {
             dataLength={messages.length}
             next={handleLoadMore}
             hasMore={hasMore}
-            loader={isLoading && <Spin />}
+            loader={
+              isLoading && (
+                <div className="flex justify-center p-4">
+                  <Spin />
+                </div>
+              )
+            }
             inverse={true}
             scrollableTarget="scrollableDiv"
-            style={{ display: "flex", flexDirection: "column-reverse" }}
+            style={{
+              display: "flex",
+              flexDirection: "column-reverse",
+            }}
+            endMessage={
+              <div className="text-center text-gray-500 p-4">
+                No more messages
+              </div>
+            }
           >
             <List
               dataSource={messages}
               renderItem={(message) => (
-                <MessageCard key={message.ID} message={message} />
+                <MessageCard
+                  key={message.ID}
+                  message={message}
+                  latestMessageRef={latestMessageRef}
+                  messageObserver={messageObserver}
+                />
               )}
             />
-            <div ref={messagesEndRef} />
           </InfiniteScroll>
         )}
       </div>
@@ -82,8 +111,14 @@ export const Messages = () => {
             size="large"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            onPressEnter={handleSendMessage}
+            onPressEnter={(e) => {
+              if (!e.shiftKey) {
+                e.preventDefault();
+                handleSendMessage();
+              }
+            }}
             placeholder="Type a message..."
+            autoComplete="off"
           />
           <Button
             type="primary"
