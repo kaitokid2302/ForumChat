@@ -3,6 +3,7 @@ import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { HomeContext } from "../../context/home/home.jsx";
 import {
   countUnreadMessage,
+  getAllMessageUnread,
   getMessagesByGroupID,
   markRead,
 } from "../../services/api/api.js";
@@ -20,20 +21,20 @@ export const useMessages = () => {
   const [isInitialLoading, setIsInitialLoading] = useState(false);
   const [error, setError] = useState(null);
   const [newMessage, setNewMessage] = useState("");
+  const [scrollToBottom, setScrollToBottom] = useState(false);
 
   // Refs
-  const messagesEndRef = useRef(null);
+  const messageRefs = useRef([]);
+
+  const handleScroll = (itemID) => {
+    const itemRef = messageRefs.current[itemID];
+    if (itemRef) {
+      itemRef.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
 
   // Constants
   const MESSAGE_SIZE = 20;
-
-  // Scroll function
-  const scrollToBottom = () => {
-    const scrollDiv = document.getElementById("scrollableDiv");
-    if (scrollDiv) {
-      scrollDiv.scrollTop = 0; // Scroll to top because of column-reverse
-    }
-  };
 
   // Load initial messages when group changes
   useEffect(() => {
@@ -43,10 +44,16 @@ export const useMessages = () => {
       setHasMore(true);
       setError(null);
       setIsInitialLoading(true);
-      loadMessages(activeGroupId, 0);
+      loadInitialMessages(activeGroupId);
     }
   }, [activeGroupId]);
 
+  const loadInitialMessages = async (groupId) => {
+    setIsInitialLoading(true);
+    const res = await getAllMessageUnread(groupId);
+    setMessages(res.data);
+    setIsInitialLoading(false);
+  };
   // WebSocket message handler
   useEffect(() => {
     if (!messageWs) return;
@@ -61,7 +68,7 @@ export const useMessages = () => {
       if (!isJoinedGroup) return;
 
       if (data.group_id === activeGroupId) {
-        // Only add message if it's not from current user
+        // Chỉ thêm vào mảng list tin nhắn nếu tin nhắn đó không phải của mình
         if (data.user_id !== currentUserId) {
           setMessages((prev) => [
             ...prev,
@@ -75,7 +82,7 @@ export const useMessages = () => {
           ]);
         }
 
-        // If message is from current user, mark as read and update count
+        // tin nhắn của chính mình thì đánh dấu cả group chat đã đọc
         if (data.user_id === currentUserId) {
           try {
             await markRead(data.group_id, data.message_id);
@@ -91,8 +98,10 @@ export const useMessages = () => {
             console.error("Failed to mark message as read:", error);
           }
         }
-      } else {
-        // Update unread count for other groups
+      }
+      // Nếu tin nhắn thuộc group khác với group đang active thì cập nhật số tin nhắn chưa đọc của group đó
+      else {
+        // cập nhật số tin nhắn chưa đọc của group khác với group đang active
         try {
           const unreadRes = await countUnreadMessage(data.group_id);
           setJoinedGroups((prev) =>
@@ -109,44 +118,30 @@ export const useMessages = () => {
     };
   }, [messageWs, activeGroupId, joinedGroups, setJoinedGroups]);
 
-  // Load messages function
+  // tải thêm tin nhắn khi cuộn lên trên
   const loadMessages = async (groupId, offset) => {
     try {
+      setIsLoading(true);
       const response = await getMessagesByGroupID(
         groupId,
         MESSAGE_SIZE,
         offset,
       );
 
-      setMessages((prev) =>
-        offset === 0 ? response.data : [...response.data, ...prev],
+      setMessages((prev) => [...response.data, ...prev]);
+
+      // call getMessage by group again to test if there are more messages
+      const nextResponse = await getMessagesByGroupID(
+        groupId,
+        1,
+        offset + response.data.length,
       );
-
-      setHasMore(response.data.length === MESSAGE_SIZE);
-      setMessageOffset(offset + MESSAGE_SIZE);
-
-      // Mark latest message as read on initial load
-      if (offset === 0 && response.data.length > 0) {
-        const latestMessage = response.data[response.data.length - 1];
-        try {
-          await markRead(groupId, latestMessage.ID);
-          const unreadRes = await countUnreadMessage(groupId);
-          setJoinedGroups((prev) =>
-            prev.map((group) =>
-              group.id === groupId
-                ? { ...group, count: unreadRes.data }
-                : group,
-            ),
-          );
-        } catch (error) {
-          console.error("Failed to mark message as read:", error);
-        }
-      }
+      setHasMore(nextResponse.data.length > 0);
+      setMessageOffset(offset + response.data.length);
     } catch (error) {
       setError("Failed to load messages");
       console.error(error);
     } finally {
-      setIsInitialLoading(false);
       setIsLoading(false);
     }
   };
@@ -183,7 +178,7 @@ export const useMessages = () => {
     setNewMessage("");
 
     // Scroll to bottom after sending
-    setTimeout(scrollToBottom, 100);
+    setScrollToBottom(true);
   }, [newMessage, messageWs, activeGroupId]);
 
   return {
@@ -196,6 +191,8 @@ export const useMessages = () => {
     setNewMessage,
     handleLoadMore,
     handleSendMessage,
-    messagesEndRef,
+    messageRefs,
+    handleScroll,
+    scrollToBottom,
   };
 };
