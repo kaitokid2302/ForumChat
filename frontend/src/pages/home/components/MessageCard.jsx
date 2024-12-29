@@ -2,7 +2,7 @@ import { Avatar } from "antd";
 import React, { useEffect, useRef } from "react";
 
 export const MessageCard = React.memo(
-  ({ message, latestMessageRef, messageObserver }) => {
+  ({ message, latestMessageRef, unreadMessageRef, messageObserver }) => {
     const currentUserId = parseInt(localStorage.getItem("userID"));
     const isCurrentUser = message.user_id === currentUserId;
     const messageRef = useRef(null);
@@ -24,11 +24,14 @@ export const MessageCard = React.memo(
           if (message.isLatest) {
             latestMessageRef.current = el;
           }
+          if (unreadMessageRef) {
+            unreadMessageRef.current = el;
+          }
         }}
         data-message-id={message.ID}
         className={`flex items-start gap-3 p-4 ${
           isCurrentUser ? "flex-row-reverse" : "flex-row"
-        }`}
+        } ${message.isFirstUnread ? "bg-blue-50" : ""}`}
       >
         <div className="flex flex-col items-center">
           <Avatar size={32}>{`user${message.user_id}`[0].toLowerCase()}</Avatar>

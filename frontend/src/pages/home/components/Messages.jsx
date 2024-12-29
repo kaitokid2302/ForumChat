@@ -1,7 +1,6 @@
 import { SendOutlined } from "@ant-design/icons";
 import { Button, Input, List, Spin } from "antd";
-import { useContext, useEffect } from "react";
-import InfiniteScroll from "react-infinite-scroll-component";
+import { useContext, useEffect, useRef } from "react";
 import { HomeContext } from "../../../context/home/home.jsx";
 import { useMessages } from "../../../hooks/home/messageWS.js";
 import { MessageCard } from "./MessageCard";
@@ -10,11 +9,8 @@ export const Messages = () => {
   const { activeGroupId, joinedGroups } = useContext(HomeContext);
   const {
     messages,
-    hasMore,
-    isLoading,
     isInitialLoading,
     error,
-    handleLoadMore,
     newMessage,
     setNewMessage,
     handleSendMessage,
@@ -22,17 +18,28 @@ export const Messages = () => {
     messageObserver,
   } = useMessages();
 
+  const unreadMessageRef = useRef(null);
+  const scrollContainerRef = useRef(null);
   const activeGroup = joinedGroups.find((g) => g.id === activeGroupId);
 
-  // Scroll to latest message when messages change
   useEffect(() => {
-    if (latestMessageRef.current) {
-      latestMessageRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "end",
-      });
+    if (!isInitialLoading && messages.length > 0) {
+      // Nếu có tin nhắn chưa đọc
+      if (unreadMessageRef.current) {
+        unreadMessageRef.current.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }
+      // Nếu không có tin nhắn chưa đọc, scroll xuống cuối
+      else if (latestMessageRef.current) {
+        if (scrollContainerRef.current) {
+          scrollContainerRef.current.scrollTop =
+            scrollContainerRef.current.scrollHeight;
+        }
+      }
     }
-  }, [messages]);
+  }, [messages, isInitialLoading]);
 
   // Handle no active group
   if (!activeGroupId) {
@@ -60,47 +67,30 @@ export const Messages = () => {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto" id="scrollableDiv">
+      <div
+        className="flex-1 overflow-y-auto"
+        id="scrollableDiv"
+        ref={scrollContainerRef}
+      >
         {isInitialLoading ? (
           <div className="flex items-center justify-center h-full">
             <Spin size="large" />
           </div>
         ) : (
-          <InfiniteScroll
-            dataLength={messages.length}
-            next={handleLoadMore}
-            hasMore={hasMore}
-            loader={
-              isLoading && (
-                <div className="flex justify-center p-4">
-                  <Spin />
-                </div>
-              )
-            }
-            inverse={true}
-            scrollableTarget="scrollableDiv"
-            style={{
-              display: "flex",
-              flexDirection: "column-reverse",
-            }}
-            endMessage={
-              <div className="text-center text-gray-500 p-4">
-                No more messages
-              </div>
-            }
-          >
-            <List
-              dataSource={messages}
-              renderItem={(message) => (
-                <MessageCard
-                  key={message.ID}
-                  message={message}
-                  latestMessageRef={latestMessageRef}
-                  messageObserver={messageObserver}
-                />
-              )}
-            />
-          </InfiniteScroll>
+          <List
+            dataSource={messages}
+            renderItem={(message) => (
+              <MessageCard
+                key={message.ID}
+                message={message}
+                latestMessageRef={latestMessageRef}
+                unreadMessageRef={
+                  message.isFirstUnread ? unreadMessageRef : null
+                }
+                messageObserver={messageObserver}
+              />
+            )}
+          />
         )}
       </div>
 

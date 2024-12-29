@@ -15,9 +15,6 @@ export const useMessages = () => {
 
   // States
   const [messages, setMessages] = useState([]);
-  const [hasMore, setHasMore] = useState(true);
-  const [messageOffset, setMessageOffset] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(false);
   const [error, setError] = useState(null);
   const [newMessage, setNewMessage] = useState("");
@@ -26,9 +23,6 @@ export const useMessages = () => {
   // Refs
   const latestMessageRef = useRef(null);
   const messageObserver = useRef(null);
-
-  // Constants
-  const MESSAGE_SIZE = 20;
 
   // Khởi tạo IntersectionObserver để theo dõi tin nhắn đã đọc
   useEffect(() => {
@@ -76,8 +70,6 @@ export const useMessages = () => {
   useEffect(() => {
     if (activeGroupId) {
       setMessages([]);
-      setMessageOffset(0);
-      setHasMore(true);
       setError(null);
       setIsInitialLoading(true);
       loadInitialMessages(activeGroupId);
@@ -87,37 +79,35 @@ export const useMessages = () => {
   const loadInitialMessages = async (groupId) => {
     try {
       setIsInitialLoading(true);
-      const res = await getAllMessageUnread(groupId);
-      console.log("res", res);
-      // if res.message = "record not found" => res.data = []
-      if (res.message == "record not found" || res.data.length == 0) {
-        // group can be not having any message or read all messages
-        // so we need to MESSAGE_SIZE
-        const res2 = await getMessagesByGroupID(groupId, MESSAGE_SIZE, 0);
-        if (res2.message == "record not found") {
-          setMessages([]);
-          return;
-        }
-        // reverse array to show latest message first
-        res2.data.reverse();
-        setMessages(
-          res2.data.map((msg, index) => ({
-            ...msg,
-            isLatest: index === res2.data.length - 1,
-          })),
-        );
+      // Load tất cả tin nhắn chưa đọc trước
+      const unreadRes = await getAllMessageUnread(groupId);
+      // reverse
+      unreadRes.data?.reverse();
+      console.log("unreadRes", unreadRes);
+
+      // Load tất cả tin nhắn của group
+      const allMessagesRes = await getMessagesByGroupID(groupId, 1000000000, 0);
+
+      if (allMessagesRes.message === "record not found") {
+        setMessages([]);
         return;
       }
-      // reverse array to show latest message first
-      res.data.reverse();
+
+      // Đảo ngược mảng để hiển thị tin nhắn mới nhất ở dưới
+      const allMessages = allMessagesRes.data.reverse();
+
+      // Đánh dấu tin nhắn chưa đọc đầu tiên (nếu có) và tin nhắn mới nhất
+      const firstUnreadMessage = unreadRes.data?.[0];
+
       setMessages(
-        res.data.map((msg, index) => ({
+        allMessages.map((msg, index) => ({
           ...msg,
-          isLatest: index === res.data.length - 1,
+          isLatest: index === allMessages.length - 1,
+          isFirstUnread: firstUnreadMessage && msg.ID === firstUnreadMessage.ID,
         })),
       );
     } catch (error) {
-      setError("Failed to load initial messages");
+      setError("Failed to load messages");
       console.error(error);
     } finally {
       setIsInitialLoading(false);
@@ -157,21 +147,20 @@ export const useMessages = () => {
               },
             ];
           });
-        } else {
-          // update count
-          try {
-            const unreadRes = await countUnreadMessage(data.group_id);
-            console.log("unreadRes", unreadRes);
-            setJoinedGroups((prev) =>
-              prev.map((group) =>
-                group.id === data.group_id
-                  ? { ...group, count: unreadRes.data }
-                  : group,
-              ),
-            );
-          } catch (error) {
-            console.error("Failed to update unread count:", error);
-          }
+        }
+
+        // Update unread count
+        try {
+          const unreadRes = await countUnreadMessage(data.group_id);
+          setJoinedGroups((prev) =>
+            prev.map((group) =>
+              group.id === data.group_id
+                ? { ...group, count: unreadRes.data }
+                : group,
+            ),
+          );
+        } catch (error) {
+          console.error("Failed to update unread count:", error);
         }
 
         if (data.user_id === currentUserId) {
@@ -205,44 +194,6 @@ export const useMessages = () => {
       }
     };
   }, [messageWs, activeGroupId, joinedGroups, setJoinedGroups]);
-
-  // Load more messages when scrolling up
-  const loadMessages = async (groupId, offset) => {
-    try {
-      setIsLoading(true);
-      const response = await getMessagesByGroupID(
-        groupId,
-        MESSAGE_SIZE,
-        offset,
-      );
-
-      setMessages((prev) => {
-        const newMessages = response.data.map((msg) => ({
-          ...msg,
-          isLatest: false,
-        }));
-        return [...newMessages, ...prev];
-      });
-
-      const nextResponse = await getMessagesByGroupID(
-        groupId,
-        1,
-        offset + response.data.length,
-      );
-      setHasMore(nextResponse.data.length > 0);
-      setMessageOffset(offset + response.data.length);
-    } catch (error) {
-      setError("Failed to load messages");
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleLoadMore = useCallback(() => {
-    if (!activeGroupId || !hasMore || isLoading) return;
-    loadMessages(activeGroupId, messageOffset);
-  }, [activeGroupId, hasMore, isLoading, messageOffset]);
 
   const handleSendMessage = useCallback(() => {
     if (!newMessage.trim() || !messageWs) return;
@@ -279,13 +230,10 @@ export const useMessages = () => {
 
   return {
     messages,
-    hasMore,
-    isLoading,
     isInitialLoading,
     error,
     newMessage,
     setNewMessage,
-    handleLoadMore,
     handleSendMessage,
     latestMessageRef,
     messageObserver: messageObserver.current,
