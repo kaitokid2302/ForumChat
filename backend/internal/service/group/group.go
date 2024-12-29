@@ -71,7 +71,8 @@ func (s *groupServiceImpl) MarkRead(c *gin.Context, groupID int, userID int, mes
 	// if already read id > messageID, then return
 	lastReadMessage, er := s.GroupRepostiory.GetLastReadMessage(groupID, userID)
 	if errors.Is(er, gorm.ErrRecordNotFound) {
-		return nil
+		// mark read
+		return s.MessageRepostiory.MarkRead(groupID, userID, messageID)
 	}
 	if er != nil {
 		return er

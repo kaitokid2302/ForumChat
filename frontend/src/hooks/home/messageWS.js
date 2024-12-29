@@ -33,7 +33,7 @@ export const useMessages = () => {
   // Khởi tạo IntersectionObserver để theo dõi tin nhắn đã đọc
   useEffect(() => {
     messageObserver.current = new IntersectionObserver(
-      debounce((entries) => {
+      debounce(async (entries) => {
         let latestVisibleMessageId = null;
 
         entries.forEach((entry) => {
@@ -49,7 +49,7 @@ export const useMessages = () => {
           latestVisibleMessageId &&
           latestVisibleMessageId !== lastReadMessageId
         ) {
-          markRead(activeGroupId, latestVisibleMessageId);
+          await markRead(activeGroupId, latestVisibleMessageId);
           setLastReadMessageId(latestVisibleMessageId);
 
           countUnreadMessage(activeGroupId).then((unreadRes) => {
@@ -88,8 +88,9 @@ export const useMessages = () => {
     try {
       setIsInitialLoading(true);
       const res = await getAllMessageUnread(groupId);
+      console.log("res", res);
       // if res.message = "record not found" => res.data = []
-      if (res.message == "record not found") {
+      if (res.message == "record not found" || res.data.length == 0) {
         // group can be not having any message or read all messages
         // so we need to MESSAGE_SIZE
         const res2 = await getMessagesByGroupID(groupId, MESSAGE_SIZE, 0);
@@ -97,6 +98,8 @@ export const useMessages = () => {
           setMessages([]);
           return;
         }
+        // reverse array to show latest message first
+        res2.data.reverse();
         setMessages(
           res2.data.map((msg, index) => ({
             ...msg,
@@ -105,6 +108,8 @@ export const useMessages = () => {
         );
         return;
       }
+      // reverse array to show latest message first
+      res.data.reverse();
       setMessages(
         res.data.map((msg, index) => ({
           ...msg,
@@ -152,6 +157,21 @@ export const useMessages = () => {
               },
             ];
           });
+        } else {
+          // update count
+          try {
+            const unreadRes = await countUnreadMessage(data.group_id);
+            console.log("unreadRes", unreadRes);
+            setJoinedGroups((prev) =>
+              prev.map((group) =>
+                group.id === data.group_id
+                  ? { ...group, count: unreadRes.data }
+                  : group,
+              ),
+            );
+          } catch (error) {
+            console.error("Failed to update unread count:", error);
+          }
         }
 
         if (data.user_id === currentUserId) {

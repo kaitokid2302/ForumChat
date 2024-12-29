@@ -74,7 +74,7 @@ func (s *groupRepositoryImp) GetGroupsByUserID(id int) (*[]database.Group, error
 func (s *groupRepositoryImp) GetLastReadMessage(groupID int, userID int) (*database.Message, error) {
 	// read table
 	var read database.Read
-	if err := s.db.Where("group_id = ? and user_id = ?", groupID, userID).First(&read).Error; err != nil {
+	if err := s.db.Where("group_id = ? and user_id = ?", groupID, userID).Last(&read).Error; err != nil {
 		return nil, err
 	}
 	// find message
