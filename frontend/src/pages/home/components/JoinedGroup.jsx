@@ -41,14 +41,17 @@ const GroupList = memo(({ groups, activeGroupId, onGroupClick, loading }) => {
     <List
       className="overflow-y-auto h-[calc(100vh-140px)]"
       dataSource={groups}
-      renderItem={(group) => (
-        <Group
-          key={group.id}
-          group={group}
-          isActive={group.id === activeGroupId}
-          onClick={onGroupClick}
-        />
-      )}
+      renderItem={(group) => {
+        console.log("GroupList component", group);
+        return (
+          <Group
+            key={group.ID}
+            group={group}
+            isActive={group.ID === activeGroupId}
+            onClick={onGroupClick}
+          />
+        );
+      }}
     />
   );
 });
@@ -73,6 +76,8 @@ export const JoinedGroup = () => {
     isSearching,
     searchInputRef,
   } = useGroupSearch(joinedGroups);
+  console.log("JoinedGroup component", joinedGroups);
+  console.log("filteredGroups", filteredGroups);
 
   const handleGroupClick = useCallback((groupId) => {
     handleSelectGroup(groupId);

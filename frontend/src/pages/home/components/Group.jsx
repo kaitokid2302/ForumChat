@@ -5,13 +5,14 @@ import { useContext, useState } from "react";
 import { HomeContext } from "../../../context/home/home.jsx";
 
 export const Group = ({ group, isActive, onClick }) => {
+  console.log("Group component", group);
   const { handleLeave, handleDelete, handleUpdate } = useContext(HomeContext);
   const [isRenameModalVisible, setIsRenameModalVisible] = useState(false);
   const [newGroupName, setNewGroupName] = useState(group.name);
   const currentUserId = parseInt(localStorage.getItem("userID"));
 
   const handleRename = () => {
-    handleUpdate(group.id, newGroupName);
+    handleUpdate(group.ID, newGroupName);
     setIsRenameModalVisible(false);
   };
 
@@ -27,7 +28,7 @@ export const Group = ({ group, isActive, onClick }) => {
             key: "delete",
             label: "Delete Group",
             danger: true,
-            onClick: () => handleDelete(group.id),
+            onClick: () => handleDelete(group.ID),
           },
         ]
       : [
@@ -35,7 +36,7 @@ export const Group = ({ group, isActive, onClick }) => {
             key: "leave",
             label: "Leave Group",
             danger: true,
-            onClick: () => handleLeave(group.id),
+            onClick: () => handleLeave(group.ID),
           },
         ];
 
@@ -43,7 +44,7 @@ export const Group = ({ group, isActive, onClick }) => {
     <>
       <List.Item
         className={`ml-2 hover:bg-gray-50 px-4 py-3 ${isActive ? "bg-blue-50" : ""}`}
-        onClick={() => onClick(group.id)}
+        onClick={() => onClick(group.ID)}
         style={{ cursor: "pointer" }}
       >
         <List.Item.Meta

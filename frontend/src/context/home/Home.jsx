@@ -28,43 +28,6 @@ export const HomeProvider = ({ children }) => {
 
   const messageWsRef = useRef(null);
   // Setup WebSockets
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-
-    // Group WebSocket
-    const groupWs = new WebSocket(`${global.host}/group/ws?token=${token}`);
-    groupWsRef.current = groupWs;
-
-    groupWs.onopen = () => {
-      console.log("Group WebSocket connected");
-    };
-
-    // Message WebSocket
-    const messageWs = new WebSocket(`${global.host}/message/ws?token=${token}`);
-    messageWsRef.current = messageWs;
-
-    messageWs.onopen = () => {
-      console.log("Message WebSocket connected");
-    };
-
-    messageWs.onclose = () => {
-      console.log("Message WebSocket disconnected");
-    };
-
-    messageWs.onerror = (error) => {
-      console.error("Message WebSocket error:", error);
-    };
-
-    return () => {
-      if (groupWsRef.current) {
-        groupWsRef.current.close();
-      }
-      if (messageWsRef.current) {
-        messageWsRef.current.close();
-      }
-    };
-  }, []);
 
   const handleSelectGroup = useCallback((groupId) => {
     setActiveGroupId(groupId);
@@ -99,7 +62,7 @@ export const HomeProvider = ({ children }) => {
                 getAllUsersInAGroup(group.ID),
               ]);
               return {
-                id: group.ID,
+                ID: group.ID,
                 name: group.name,
                 ownerId: group.owner_id,
                 count: unreadRes?.data || 0,
@@ -108,7 +71,7 @@ export const HomeProvider = ({ children }) => {
             } catch (error) {
               console.warn(`Failed to get data for group ${group.ID}:`, error);
               return {
-                id: group.ID,
+                ID: group.ID,
                 name: group.name,
                 ownerId: group.owner_id,
                 count: 0,
@@ -124,7 +87,7 @@ export const HomeProvider = ({ children }) => {
             try {
               const participantsRes = await getAllUsersInAGroup(group.ID);
               return {
-                id: group.ID,
+                ID: group.ID,
                 name: group.name,
                 ownerId: group.owner_id,
                 participant_count: participantsRes.data?.length || 0,
@@ -135,7 +98,7 @@ export const HomeProvider = ({ children }) => {
                 error,
               );
               return {
-                id: group.ID,
+                ID: group.ID,
                 name: group.name,
                 ownerId: group.owner_id,
                 participant_count: 0,
@@ -170,14 +133,14 @@ export const HomeProvider = ({ children }) => {
             try {
               const unreadRes = await countUnreadMessage(group.ID);
               return {
-                id: group.ID,
+                ID: group.ID,
                 name: group.name,
                 ownerId: group.owner_id,
                 count: unreadRes.data,
               };
             } catch (error) {
               return {
-                id: group.ID,
+                ID: group.ID,
                 name: group.name,
                 ownerId: group.owner_id,
                 count: 0,
@@ -211,14 +174,14 @@ export const HomeProvider = ({ children }) => {
             try {
               const unreadRes = await countUnreadMessage(group.ID);
               return {
-                id: group.ID,
+                ID: group.ID,
                 name: group.name,
                 ownerId: group.owner_id,
                 count: unreadRes.data,
               };
             } catch (error) {
               return {
-                id: group.ID,
+                ID: group.ID,
                 name: group.name,
                 ownerId: group.owner_id,
                 count: 0,
@@ -254,14 +217,14 @@ export const HomeProvider = ({ children }) => {
             try {
               const unreadRes = await countUnreadMessage(group.ID);
               return {
-                id: group.ID,
+                ID: group.ID,
                 name: group.name,
                 ownerId: group.owner_id,
                 count: unreadRes.data,
               };
             } catch (error) {
               return {
-                id: group.ID,
+                ID: group.ID,
                 name: group.name,
                 ownerId: group.owner_id,
                 count: 0,
@@ -317,7 +280,7 @@ export const HomeProvider = ({ children }) => {
             try {
               const unreadRes = await countUnreadMessage(group.ID);
               return {
-                id: group.ID,
+                ID: group.ID,
                 name: group.name,
                 ownerId: group.owner_id,
                 count: unreadRes?.data || 0,
@@ -328,7 +291,7 @@ export const HomeProvider = ({ children }) => {
                 error,
               );
               return {
-                id: group.ID,
+                ID: group.ID,
                 name: group.name,
                 ownerId: group.owner_id,
                 count: 0,
@@ -370,7 +333,7 @@ export const HomeProvider = ({ children }) => {
             setUnjoinedGroups((prev) => [
               ...prev,
               {
-                id: data.group_id,
+                ID: data.group_id,
                 name: data.name,
                 ownerId: data.owner_id,
                 count: 0,
@@ -388,10 +351,10 @@ export const HomeProvider = ({ children }) => {
 
           case "delete": {
             setJoinedGroups((prev) =>
-              prev.filter((group) => group.id !== data.group_id),
+              prev.filter((group) => group.ID !== data.group_id),
             );
             setUnjoinedGroups((prev) =>
-              prev.filter((group) => group.id !== data.group_id),
+              prev.filter((group) => group.ID !== data.group_id),
             );
             const userID = localStorage.getItem("userID");
             if (data.user_id != userID) {
@@ -406,14 +369,14 @@ export const HomeProvider = ({ children }) => {
           case "update": {
             setJoinedGroups((prev) =>
               prev.map((group) =>
-                group.id === data.group_id
+                group.ID === data.group_id
                   ? { ...group, name: data.name }
                   : group,
               ),
             );
             setUnjoinedGroups((prev) =>
               prev.map((group) =>
-                group.id === data.group_id
+                group.ID === data.group_id
                   ? { ...group, name: data.name }
                   : group,
               ),
@@ -429,8 +392,12 @@ export const HomeProvider = ({ children }) => {
           }
 
           case "join":
+            break;
           case "leave":
-            // Bỏ qua xử lý join/leave
+            // set active group to null if the user leaves the active group
+            if (data.group_id === activeGroupId) {
+              setActiveGroupId(null);
+            }
             break;
 
           default:

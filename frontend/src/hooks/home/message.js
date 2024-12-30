@@ -49,7 +49,7 @@ export const useMessages = () => {
           countUnreadMessage(activeGroupId).then((unreadRes) => {
             setJoinedGroups((prev) =>
               prev.map((group) =>
-                group.id === activeGroupId
+                group.ID === activeGroupId
                   ? { ...group, count: unreadRes.data }
                   : group,
               ),
@@ -123,7 +123,7 @@ export const useMessages = () => {
       const currentUserId = parseInt(localStorage.getItem("userID"));
 
       const isJoinedGroup = joinedGroups.some(
-        (group) => group.id === data.group_id,
+        (group) => group.ID === data.group_id,
       );
       if (!isJoinedGroup) return;
 
@@ -154,7 +154,7 @@ export const useMessages = () => {
           const unreadRes = await countUnreadMessage(data.group_id);
           setJoinedGroups((prev) =>
             prev.map((group) =>
-              group.id === data.group_id
+              group.ID === data.group_id
                 ? { ...group, count: unreadRes.data }
                 : group,
             ),
@@ -169,7 +169,7 @@ export const useMessages = () => {
             const unreadRes = await countUnreadMessage(data.group_id);
             setJoinedGroups((prev) =>
               prev.map((group) =>
-                group.id === data.group_id
+                group.ID === data.group_id
                   ? { ...group, count: unreadRes.data }
                   : group,
               ),
@@ -183,7 +183,7 @@ export const useMessages = () => {
           const unreadRes = await countUnreadMessage(data.group_id);
           setJoinedGroups((prev) =>
             prev.map((group) =>
-              group.id === data.group_id
+              group.ID === data.group_id
                 ? { ...group, count: unreadRes.data }
                 : group,
             ),

@@ -208,18 +208,14 @@ export const NotJoinedGroup = () => {
               getAllUsersInAGroup(group.ID),
             ]);
             return {
-              id: group.ID,
-              name: group.name,
-              ownerId: group.owner_id,
+              ...group, // Giữ nguyên tất cả properties từ API
               count: unreadRes?.data || 0,
               participant_count: participantsRes.data?.length || 0,
             };
           } catch (error) {
             console.warn(`Failed to get data for group ${group.ID}:`, error);
             return {
-              id: group.ID,
-              name: group.name,
-              ownerId: group.owner_id,
+              ...group,
               count: 0,
               participant_count: 0,
             };
@@ -233,9 +229,7 @@ export const NotJoinedGroup = () => {
           try {
             const participantsRes = await getAllUsersInAGroup(group.ID);
             return {
-              id: group.ID,
-              name: group.name,
-              ownerId: group.owner_id,
+              ...group, // Giữ nguyên tất cả properties từ API
               participant_count: participantsRes.data?.length || 0,
             };
           } catch (error) {
@@ -244,9 +238,7 @@ export const NotJoinedGroup = () => {
               error,
             );
             return {
-              id: group.ID,
-              name: group.name,
-              ownerId: group.owner_id,
+              ...group,
               participant_count: 0,
             };
           }
@@ -264,6 +256,7 @@ export const NotJoinedGroup = () => {
   };
 
   const handleJoin = async (groupId) => {
+    console.log("handleJoin", groupId);
     try {
       if (groupWs?.readyState === WebSocket.OPEN) {
         await sendJoinMessage(groupWs, groupId);
