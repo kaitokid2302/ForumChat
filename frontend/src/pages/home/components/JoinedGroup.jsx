@@ -3,7 +3,7 @@ import { PlusOutlined, SearchOutlined } from "@ant-design/icons";
 import { Button, Input, List, Modal, Skeleton } from "antd";
 import { memo, useCallback, useContext } from "react";
 import { HomeContext } from "../../../context/home/home.jsx";
-import { useGroupSearch } from "../../../hooks/home/groupJoinedHook.js";
+import { useGroupSearch } from "../../../hooks/home/groupjoined.js";
 import { Group } from "./Group.jsx"; // Thêm memo
 
 // Tách SearchInput thành component riêng và memo
