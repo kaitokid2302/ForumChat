@@ -11,3 +11,4 @@ node_modules
 internal/infrastructure/config/local.yaml
 
 frontend/node_modules
+frontend.iml
