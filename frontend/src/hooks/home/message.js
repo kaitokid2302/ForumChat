@@ -26,12 +26,14 @@ export const useMessages = () => {
 
   // Khởi tạo IntersectionObserver để theo dõi tin nhắn đã đọc
   useEffect(() => {
+    if (!activeGroupId) return;
+
     messageObserver.current = new IntersectionObserver(
       debounce(async (entries) => {
         let latestVisibleMessageId = null;
 
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
+          if (entry.isIntersecting && entry.target) {
             const messageId = parseInt(entry.target.dataset.messageId);
             if (!latestVisibleMessageId || messageId > latestVisibleMessageId) {
               latestVisibleMessageId = messageId;
@@ -41,12 +43,14 @@ export const useMessages = () => {
 
         if (
           latestVisibleMessageId &&
-          latestVisibleMessageId !== lastReadMessageId
+          latestVisibleMessageId !== lastReadMessageId &&
+          activeGroupId
         ) {
-          await markRead(activeGroupId, latestVisibleMessageId);
-          setLastReadMessageId(latestVisibleMessageId);
+          try {
+            await markRead(activeGroupId, latestVisibleMessageId);
+            setLastReadMessageId(latestVisibleMessageId);
 
-          countUnreadMessage(activeGroupId).then((unreadRes) => {
+            const unreadRes = await countUnreadMessage(activeGroupId);
             setJoinedGroups((prev) =>
               prev.map((group) =>
                 group.ID === activeGroupId
@@ -54,14 +58,21 @@ export const useMessages = () => {
                   : group,
               ),
             );
-          });
+          } catch (error) {
+            console.error("Failed to mark message as read:", error);
+          }
         }
       }, 200),
+      { threshold: 0.5 },
     );
 
     return () => {
       if (messageObserver.current) {
-        messageObserver.current.disconnect();
+        try {
+          messageObserver.current.disconnect();
+        } catch (error) {
+          console.warn("Failed to disconnect observer:", error);
+        }
       }
     };
   }, [activeGroupId, lastReadMessageId, setJoinedGroups]);
@@ -81,12 +92,12 @@ export const useMessages = () => {
       setIsInitialLoading(true);
       // Load tất cả tin nhắn chưa đọc trước
       const unreadRes = await getAllMessageUnread(groupId);
-      // reverse
-      unreadRes.data?.reverse();
-      console.log("unreadRes", unreadRes);
+      const unreadMessages = unreadRes.data || [];
+      unreadMessages.reverse();
 
       // Load tất cả tin nhắn của group
       const allMessagesRes = await getMessagesByGroupID(groupId, 1000000000, 0);
+      console.log("allMessagesRes", allMessagesRes);
 
       if (allMessagesRes.message === "record not found") {
         setMessages([]);
@@ -97,7 +108,7 @@ export const useMessages = () => {
       const allMessages = allMessagesRes.data.reverse();
 
       // Đánh dấu tin nhắn chưa đọc đầu tiên (nếu có) và tin nhắn mới nhất
-      const firstUnreadMessage = unreadRes.data?.[0];
+      const firstUnreadMessage = unreadMessages[0];
 
       setMessages(
         allMessages.map((msg, index) => ({
@@ -196,6 +207,8 @@ export const useMessages = () => {
   }, [messageWs, activeGroupId, joinedGroups, setJoinedGroups]);
 
   const handleSendMessage = useCallback(() => {
+    console.log("handleSendMessage");
+    console.log("newMessage", newMessage);
     if (!newMessage.trim() || !messageWs) return;
 
     const currentUserId = parseInt(localStorage.getItem("userID"));
@@ -204,6 +217,7 @@ export const useMessages = () => {
       text: newMessage.trim(),
       group_id: activeGroupId,
     };
+    console.log("message", message);
 
     setMessages((prev) => {
       const updatedPrev = prev.map((msg) => ({

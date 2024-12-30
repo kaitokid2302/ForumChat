@@ -198,6 +198,7 @@ export const HomeProvider = ({ children }) => {
     }
   };
 
+  // Sửa lại handleLeave:
   const handleLeave = async (groupId) => {
     if (groupWsRef.current?.readyState === WebSocket.OPEN) {
       groupWsRef.current.send(
@@ -208,12 +209,15 @@ export const HomeProvider = ({ children }) => {
       );
 
       try {
-        // Fetch lại danh sách groups sau khi leave
-        const joinedRes = await getAllJoinedGroups();
-        const joinedGroupsData = joinedRes.data;
+        // Fetch lại cả joined và unjoined groups
+        const [joinedRes, unjoinedRes] = await Promise.all([
+          getAllJoinedGroups(),
+          getAllUnjoinedGroups(),
+        ]);
 
+        // Xử lý joined groups
         const groupsWithCounts = await Promise.all(
-          joinedGroupsData.map(async (group) => {
+          (joinedRes.data || []).map(async (group) => {
             try {
               const unreadRes = await countUnreadMessage(group.ID);
               return {
@@ -233,7 +237,36 @@ export const HomeProvider = ({ children }) => {
           }),
         );
 
+        // Xử lý unjoined groups
+        const unjoinedGroupsData = await Promise.all(
+          (unjoinedRes.data || []).map(async (group) => {
+            try {
+              const participantsRes = await getAllUsersInAGroup(group.ID);
+              return {
+                ID: group.ID,
+                name: group.name,
+                ownerId: group.owner_id,
+                participant_count: participantsRes.data?.length || 0,
+              };
+            } catch (error) {
+              return {
+                ID: group.ID,
+                name: group.name,
+                ownerId: group.owner_id,
+                participant_count: 0,
+              };
+            }
+          }),
+        );
+
         setJoinedGroups(groupsWithCounts);
+        setUnjoinedGroups(unjoinedGroupsData);
+
+        // Reset active group
+        if (groupId === activeGroupId) {
+          setActiveGroupId(null);
+        }
+
         openNotification("Success", "Left group successfully");
       } catch (error) {
         console.error("Failed to refresh groups:", error);
@@ -318,7 +351,20 @@ export const HomeProvider = ({ children }) => {
     if (!token) return;
 
     const groupWs = new WebSocket(`${global.host}/group/ws?token=${token}`);
+    const messageWs = new WebSocket(`${global.host}/message/ws?token=${token}`);
+
+    messageWsRef.current = messageWs;
     groupWsRef.current = groupWs;
+
+    messageWs.onopen = () => {
+      console.log("Message WebSocket connected");
+    };
+    messageWs.onerror = (error) => {
+      console.error("Message WebSocket error:", error);
+    };
+    messageWs.onclose = () => {
+      console.log("Message WebSocket disconnected");
+    };
 
     groupWs.onopen = () => {
       console.log("Group WebSocket connected");

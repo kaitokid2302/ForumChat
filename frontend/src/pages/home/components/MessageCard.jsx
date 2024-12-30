@@ -9,22 +9,36 @@ export const MessageCard = React.memo(
 
     // Set up intersection observer for read tracking
     useEffect(() => {
-      if (messageRef.current && messageObserver) {
-        messageObserver.observe(messageRef.current);
-        return () => {
-          messageObserver.unobserve(messageRef.current);
-        };
+      const currentElement = messageRef.current;
+      if (currentElement && messageObserver) {
+        try {
+          messageObserver.observe(currentElement);
+          return () => {
+            if (currentElement) {
+              try {
+                messageObserver.unobserve(currentElement);
+              } catch (error) {
+                console.warn("Failed to unobserve message:", error);
+              }
+            }
+          };
+        } catch (error) {
+          console.warn("Failed to observe message:", error);
+        }
       }
     }, [messageObserver]);
+
+    // Nếu không có message, không render gì cả
+    if (!message) return null;
 
     return (
       <div
         ref={(el) => {
           messageRef.current = el;
-          if (message.isLatest) {
+          if (message.isLatest && latestMessageRef) {
             latestMessageRef.current = el;
           }
-          if (unreadMessageRef) {
+          if (message.isFirstUnread && unreadMessageRef) {
             unreadMessageRef.current = el;
           }
         }}
