@@ -18,7 +18,7 @@ const useLogin = () => {
         setError("Login failed");
         throw new Error("Login failed");
       }
-      setAuth(token, response.data.userID);
+      await setAuth(token, response.data.userID);
       navigate("/home");
     } catch (error) {
       setError(error.message);

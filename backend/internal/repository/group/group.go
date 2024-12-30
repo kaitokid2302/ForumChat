@@ -19,10 +19,21 @@ type GroupRepostiory interface {
 	GetAllGroups(size int, offset int) (*[]database.Group, error)
 	GetUnjoinedGroup(userID int) (*[]database.Group, error)
 	GetLastMessage(groupID int) (*database.Message, error)
+	GetOwnerGroup(groupID int) (string, error)
 }
 
 type groupRepositoryImp struct {
 	db *gorm.DB
+}
+
+func (s *groupRepositoryImp) GetOwnerGroup(groupID int) (string, error) {
+	var group database.Group
+	// preload
+	if err := s.db.Preload("Owner").First(&group, groupID).Error; err != nil {
+		return "", err
+	}
+	owner := group.Owner.Username
+	return owner, nil
 }
 
 func (s *groupRepositoryImp) GetAllGroups(size int, offset int) (*[]database.Group, error) {

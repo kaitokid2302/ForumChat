@@ -60,3 +60,10 @@ export const getAllUnjoinedGroups = async () => {
   const res = await api.get("/group/unjoined");
   return res.data;
 };
+
+// r.GET("/group/owner/:groupID", h.GetOwnerGroup)
+
+export const getOwnerGroup = async (groupID) => {
+  const res = await api.get(`/group/owner/${groupID}`);
+  return res.data;
+};

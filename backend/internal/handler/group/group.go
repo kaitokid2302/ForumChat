@@ -180,6 +180,21 @@ func (h *GroupHandler) GetAllUnjoinedGroup(c *gin.Context) {
 	response.ReponseOutput(c, response.Success, "", groups)
 }
 
+func (h *GroupHandler) GetOwnerGroup(c *gin.Context) {
+	groupIDString := c.Param("groupID")
+	groupID, er := strconv.Atoi(groupIDString)
+	if er != nil {
+		response.ReponseOutput(c, response.Fail, er.Error(), nil)
+		return
+	}
+	group, er := h.GroupService.GetOwnerGroup(c, groupID)
+	if er != nil {
+		response.ReponseOutput(c, response.Fail, er.Error(), nil)
+		return
+	}
+	response.ReponseOutput(c, response.Success, "", group)
+}
+
 // /group/new?name=: create new group
 
 // /groupd/rename?name=: rename group

@@ -5,6 +5,8 @@ import global from "../../config/config.js";
 import {
   countUnreadMessage,
   getAllJoinedGroups,
+  getAllUnjoinedGroups,
+  getAllUsersInAGroup,
 } from "../../services/api/api.js";
 
 export const HomeContext = createContext();
@@ -78,28 +80,72 @@ export const HomeProvider = ({ children }) => {
       );
 
       try {
-        const joinedRes = await getAllJoinedGroups();
+        // Fetch cả joined và unjoined groups
+        const [joinedRes, unjoinedRes] = await Promise.all([
+          getAllJoinedGroups(),
+          getAllUnjoinedGroups(),
+        ]);
+
+        if (!joinedRes?.data || !unjoinedRes?.data) {
+          throw new Error("Invalid response format from API");
+        }
+
+        // Xử lý joined groups
         const joinedGroupsData = await Promise.all(
           joinedRes.data.map(async (group) => {
             try {
-              const unreadRes = await countUnreadMessage(group.ID);
+              const [unreadRes, participantsRes] = await Promise.all([
+                countUnreadMessage(group.ID),
+                getAllUsersInAGroup(group.ID),
+              ]);
               return {
                 id: group.ID,
                 name: group.name,
                 ownerId: group.owner_id,
-                count: unreadRes.data,
+                count: unreadRes?.data || 0,
+                participant_count: participantsRes.data?.length || 0,
               };
             } catch (error) {
+              console.warn(`Failed to get data for group ${group.ID}:`, error);
               return {
                 id: group.ID,
                 name: group.name,
                 ownerId: group.owner_id,
                 count: 0,
+                participant_count: 0,
               };
             }
           }),
         );
+
+        // Xử lý unjoined groups
+        const unjoinedGroupsData = await Promise.all(
+          unjoinedRes.data.map(async (group) => {
+            try {
+              const participantsRes = await getAllUsersInAGroup(group.ID);
+              return {
+                id: group.ID,
+                name: group.name,
+                ownerId: group.owner_id,
+                participant_count: participantsRes.data?.length || 0,
+              };
+            } catch (error) {
+              console.warn(
+                `Failed to get participants for group ${group.ID}:`,
+                error,
+              );
+              return {
+                id: group.ID,
+                name: group.name,
+                ownerId: group.owner_id,
+                participant_count: 0,
+              };
+            }
+          }),
+        );
+
         setJoinedGroups(joinedGroupsData);
+        setUnjoinedGroups(unjoinedGroupsData);
         openNotification("Success", "Group created successfully");
       } catch (error) {
         console.error("Failed to refresh groups:", error);
@@ -238,14 +284,34 @@ export const HomeProvider = ({ children }) => {
   // Fetch initial data
   useEffect(() => {
     // context/home/home.jsx
-    const fetchInitialData = async () => {
+    const fetchInitialData = async (retryCount = 3) => {
       setIsLoading(true);
       try {
+        const token = localStorage.getItem("token");
+        console.log("Token:", token);
+
+        if (!token && retryCount > 0) {
+          console.log(
+            `Retrying fetchInitialData... (${retryCount} attempts left)`,
+          );
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          return fetchInitialData(retryCount - 1);
+        }
+
+        if (!token) {
+          throw new Error("No authentication token found");
+        }
+
         // Fetch joined groups
         const joinedRes = await getAllJoinedGroups();
+
+        if (!joinedRes?.data) {
+          throw new Error("Invalid response format from getAllJoinedGroups");
+        }
+
         const joinedGroupsData = joinedRes.data;
 
-        // Fetch unread counts for each joined group
+        // Fetch unread counts
         const groupsWithCounts = await Promise.all(
           joinedGroupsData.map(async (group) => {
             try {
@@ -254,10 +320,13 @@ export const HomeProvider = ({ children }) => {
                 id: group.ID,
                 name: group.name,
                 ownerId: group.owner_id,
-                count: unreadRes.data,
+                count: unreadRes?.data || 0,
               };
-            } catch {
-              // Nếu có lỗi khi đếm tin nhắn chưa đọc, set count = 0
+            } catch (error) {
+              console.warn(
+                `Failed to get unread count for group ${group.ID}:`,
+                error,
+              );
               return {
                 id: group.ID,
                 name: group.name,

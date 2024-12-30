@@ -1,8 +1,28 @@
 import { jwtDecode } from "jwt-decode";
 
-export const setAuth = (jwt, userID) => {
-  localStorage.setItem("token", jwt);
-  localStorage.setItem("userID", userID);
+export const setAuth = async (jwt, userID) => {
+  try {
+    await Promise.all([
+      localStorage.setItem("token", jwt),
+      localStorage.setItem("userID", userID),
+    ]);
+
+    // Verify storage
+    const storedToken = localStorage.getItem("token");
+    const storedUserID = localStorage.getItem("userID");
+
+    if (!storedToken || !storedUserID) {
+      throw new Error("Failed to store authentication data");
+    }
+
+    console.log("setAuth successful:", {
+      token: storedToken,
+      userID: storedUserID,
+    });
+  } catch (error) {
+    console.error("setAuth failed:", error);
+    throw error;
+  }
 };
 
 export const deleteJwt = () => {
@@ -25,18 +45,23 @@ export const jwtCheck = () => {
   const token = localStorage.getItem("token");
   if (token) {
     try {
-      const exp = jwtDecode(token).exp;
+      const decoded = jwtDecode(token);
       const now = Date.now().valueOf() / 1000;
-      if (now > exp) {
+
+      if (now > decoded.exp) {
         deleteJwt();
         return false;
       }
-      let userIDlocal = localStorage.getItem("userID");
-      let userIDjwt = jwtDecode(token).userID;
-      if (userIDlocal !== userIDjwt) {
+
+      const userIDlocal = localStorage.getItem("userID");
+      const userIDjwt = decoded.userID;
+
+      // Chuyển đổi sang string để so sánh
+      if (userIDlocal !== String(userIDjwt)) {
         deleteJwt();
         return false;
       }
+
       return true;
     } catch (error) {
       console.error("Invalid token specified:", error);

@@ -13,4 +13,5 @@ func (h *GroupHandler) InitRoute(r *gin.RouterGroup) {
 	r.GET("/all", h.GetAllGroups)
 	r.GET("/group/message/:groupID", h.GetAllMessageUnread)
 	r.GET("/unjoined", h.GetAllUnjoinedGroup)
+	r.GET("/owner/:groupID", h.GetOwnerGroup)
 }

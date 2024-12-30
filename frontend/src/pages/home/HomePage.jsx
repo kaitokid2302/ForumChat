@@ -1,7 +1,7 @@
 import { HomeProvider } from "../../context/home/home.jsx";
 import { JoinedGroup } from "./components/JoinedGroup.jsx";
 import { Messages } from "./components/Messages.jsx";
-import { NotJoinedGroup } from "./components/NotJoinedGroup.js";
+import { NotJoinedGroup } from "./components/NotJoinedGroup.jsx";
 
 export default function HomePage() {
   return (

@@ -23,6 +23,7 @@ type GroupService interface {
 	CountUnreadMessage(c *gin.Context, groupID int, userID int) (int, error)
 	GetAllMessageUnread(c *gin.Context, groupID int) (*[]database.Message, error)
 	GetUnjoinedGroup(c *gin.Context, userID int) (*[]database.Group, error)
+	GetOwnerGroup(c *gin.Context, groupID int) (string, error)
 }
 
 type groupServiceImpl struct {
@@ -33,6 +34,10 @@ type groupServiceImpl struct {
 
 func (s *groupServiceImpl) GetAllGroups(c *gin.Context, size int, offset int) (*[]database.Group, error) {
 	return s.GroupRepostiory.GetAllGroups(size, offset)
+}
+
+func (s *groupServiceImpl) GetOwnerGroup(c *gin.Context, groupID int) (string, error) {
+	return s.GroupRepostiory.GetOwnerGroup(groupID)
 }
 
 func (s *groupServiceImpl) GetUnjoinedGroup(c *gin.Context, userID int) (*[]database.Group, error) {
