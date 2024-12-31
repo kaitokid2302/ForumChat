@@ -1,4 +1,4 @@
-import { HomeProvider } from "../../context/home/home.jsx";
+import { HomeProvider } from "../../context/home/Home.jsx";
 import { JoinedGroup } from "./components/JoinedGroup.jsx";
 import { Messages } from "./components/Messages.jsx";
 import { NotJoinedGroup } from "./components/NotJoinedGroup.jsx";

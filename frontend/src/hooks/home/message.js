@@ -1,6 +1,6 @@
 import { debounce } from "lodash";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
-import { HomeContext } from "../../context/home/home.jsx";
+import { HomeContext } from "../../context/home/Home.jsx";
 import {
   countUnreadMessage,
   getAllMessageUnread,

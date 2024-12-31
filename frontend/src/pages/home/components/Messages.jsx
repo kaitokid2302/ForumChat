@@ -1,7 +1,7 @@
 import { SendOutlined } from "@ant-design/icons";
 import { Button, Input, List, Spin } from "antd";
 import { useContext, useEffect, useRef } from "react";
-import { HomeContext } from "../../../context/home/home.jsx";
+import { HomeContext } from "../../../context/home/Home.jsx";
 import { useMessages } from "../../../hooks/home/message.js";
 import { MessageCard } from "./MessageCard";
 

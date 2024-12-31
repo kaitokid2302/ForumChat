@@ -7,6 +7,7 @@ import (
 )
 
 func ViperInit() {
+
 	viper.SetConfigName("local")
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath("./internal/infrastructure/config")

@@ -1,0 +1,35 @@
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    environment:
+      - VITE_BACKEND_HOST=http://backend:8080
+
+  postgres:
+    image: postgres:latest
+    environment:
+      - POSTGRES_USER=gorm
+      - POSTGRES_PASSWORD=gorm
+      - POSTGRES_DB=forumchat
+    ports:
+      - "5432:5432"
+
+networks:
+  default:
+    driver: bridge

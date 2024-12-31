@@ -2,7 +2,7 @@ import { Button, Form, Input } from "antd";
 import { useFormik } from "formik";
 import { useContext, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { AuthContext } from "../../context/auth/auth.jsx";
+import { AuthContext } from "../../context/auth/Auth.jsx";
 import useLogin from "../../hooks/auth/login.jsx";
 import { jwtCheck } from "../../services/auth/jwt.js";
 

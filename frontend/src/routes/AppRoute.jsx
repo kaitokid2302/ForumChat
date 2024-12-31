@@ -1,6 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import global from "../config/config.js";
-import { AuthProvider } from "../context/auth/auth.jsx";
+import { AuthProvider } from "../context/auth/Auth.jsx";
 import { HomeProvider } from "../context/home/Home.jsx";
 import { MainLayout } from "../layout/Main.jsx";
 import { LoginPage } from "../pages/auth/index.js";

@@ -2,7 +2,7 @@
 import { MoreOutlined } from "@ant-design/icons";
 import { Avatar, Badge, Dropdown, Input, List, Modal } from "antd";
 import { useContext, useState } from "react";
-import { HomeContext } from "../../../context/home/home.jsx";
+import { HomeContext } from "../../../context/home/Home.jsx";
 
 export const Group = ({ group, isActive, onClick }) => {
   console.log("Group component", group);
