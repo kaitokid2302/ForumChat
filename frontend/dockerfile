@@ -14,5 +14,7 @@ COPY . .
 # Expose Vite dev server port
 EXPOSE 5173
 
+RUN rm -f .env .env.* 
+
 # Start Vite dev server with host option
 CMD ["npm", "run", "dev", "--", "--host"]
