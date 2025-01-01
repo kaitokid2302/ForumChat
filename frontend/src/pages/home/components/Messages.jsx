@@ -1,5 +1,6 @@
 import { SendOutlined } from "@ant-design/icons";
-import { Button, Input, List, Spin } from "antd";
+import { Button, List, Spin } from "antd";
+import TextArea from "antd/es/input/TextArea.js";
 import { useContext, useEffect, useRef } from "react";
 import { HomeContext } from "../../../context/home/Home.jsx";
 import { useMessages } from "../../../hooks/home/message.js";
@@ -96,20 +97,28 @@ export const Messages = () => {
 
       {/* Input */}
       <div className="p-4 border-t">
-        <div className="flex gap-2">
-          <Input
-            size="large"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onPressEnter={(e) => {
-              if (!e.shiftKey) {
-                e.preventDefault();
-                handleSendMessage();
-              }
-            }}
-            placeholder="Type a message..."
-            autoComplete="off"
-          />
+        <div className="flex gap-2 max-w-full">
+          {" "}
+          {/* Thêm max-w-full */}
+          <div className="flex-1 max-w-[calc(100%-50px)]">
+            {" "}
+            {/* Container cho input/textarea */}
+            <TextArea
+              size="large"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onPressEnter={(e) => {
+                if (!e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
+              placeholder="Type a message..."
+              autoComplete="off"
+              autoSize={{ minRows: 1, maxRows: 10 }}
+              className="resize-none w-full" // Thêm w-full
+            />
+          </div>
           <Button
             type="primary"
             icon={<SendOutlined />}

@@ -219,6 +219,7 @@ export const useMessages = () => {
         const updatedPrev = prev.map((msg) => ({
           ...msg,
           isLatest: false,
+          isFirstUnread: false, // Reset isFirstUnread cho tất cả tin nhắn cũ
         }));
 
         return [
@@ -230,8 +231,14 @@ export const useMessages = () => {
             group_id: activeGroupId,
             CreatedAt: new Date().toISOString(),
             isLatest: true,
+            isFirstUnread: false, // Tin nhắn mới cũng không phải là unread
           },
         ];
+      });
+
+      // Đánh dấu đã đọc tin nhắn mới nhất
+      markRead(activeGroupId, Date.now()).catch((error) => {
+        console.error("Failed to mark message as read:", error);
       });
 
       messageWs.send(JSON.stringify(message));

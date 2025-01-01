@@ -77,7 +77,7 @@ export const MessageCard = React.memo(
           </div>
 
           <div
-            className={`max-w-[70%] px-4 py-2 rounded-2xl ${
+            className={`max-w-[250px] w-fit px-4 py-2 rounded-2xl break-words ${
               isCurrentUser
                 ? "bg-blue-500 text-white rounded-tr-none"
                 : "bg-gray-100 text-gray-800 rounded-tl-none"
