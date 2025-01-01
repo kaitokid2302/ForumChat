@@ -12,6 +12,8 @@ import (
 type UserService interface {
 	RegisterUser(c *gin.Context, request request.RegisterRequest) error
 	LoginUser(c *gin.Context, registerRequest request.LoginRequest) (string, uint, error)
+	GetUserByID(c *gin.Context, userID int) (string, error)
+	GetUserByUsername(c *gin.Context, username string) (int, error)
 }
 
 type userServiceImpl struct {
@@ -19,11 +21,27 @@ type userServiceImpl struct {
 	jwt.JWTservice
 }
 
+func (s *userServiceImpl) GetUserByUsername(c *gin.Context, username string) (int, error) {
+	user, er := s.UserRepository.GetUserByUsername(username)
+	if er != nil {
+		return 0, er
+	}
+	return int(user.ID), nil
+}
+
 func NewUserService(userRepository user.UserRepository, jwtService jwt.JWTservice) UserService {
 	return &userServiceImpl{
 		UserRepository: userRepository,
 		JWTservice:     jwtService,
 	}
+}
+
+func (s *userServiceImpl) GetUserByID(c *gin.Context, userID int) (string, error) {
+	user, er := s.UserRepository.GetUserByID(userID)
+	if er != nil {
+		return "", er
+	}
+	return user.Username, nil
 }
 
 func (s *userServiceImpl) RegisterUser(c *gin.Context, request request.RegisterRequest) error {

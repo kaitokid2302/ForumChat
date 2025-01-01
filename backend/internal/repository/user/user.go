@@ -11,10 +11,30 @@ type UserRepository interface {
 	ExistUserByUsername(username string) (bool, error)
 	InsertUser(username string, password string) error
 	Login(username string, password string) (bool, error, *database.User)
+	GetUserByID(userID int) (*database.User, error)
+	GetUserByUsername(username string) (*database.User, error)
 }
 
 type userRepositoryImpl struct {
 	db *gorm.DB
+}
+
+func (s *userRepositoryImpl) GetUserByUsername(username string) (*database.User, error) {
+	var user database.User
+	er := s.db.Where("username = ?", username).First(&user).Error
+	if er != nil {
+		return nil, er
+	}
+	return &user, nil
+}
+
+func (s *userRepositoryImpl) GetUserByID(userID int) (*database.User, error) {
+	var user database.User
+	er := s.db.Where("id = ?", userID).First(&user).Error
+	if er != nil {
+		return nil, er
+	}
+	return &user, nil
 }
 
 func NewUserRepository(db *gorm.DB) UserRepository {

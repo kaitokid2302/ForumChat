@@ -67,3 +67,17 @@ export const getOwnerGroup = async (groupID) => {
   const res = await api.get(`/group/owner/${groupID}`);
   return res.data;
 };
+
+// 	r.GET("/user/user/:userID", h.GetUserByID)
+
+export const getUserByID = async (userID) => {
+  const res = await api.get(`/user/user/${userID}`);
+  return res.data;
+};
+
+// 	r.GET("/user/user/username/:username", h.GetUserByUsername)
+
+export const getUserByUsername = async (username) => {
+  const res = await api.get(`/user/user/username/${username}`);
+  return res.data;
+};

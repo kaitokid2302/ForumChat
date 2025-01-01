@@ -1,6 +1,8 @@
 package user
 
 import (
+	"strconv"
+
 	"ForumChat/internal/request"
 	"ForumChat/internal/response"
 	"ForumChat/internal/service/user"
@@ -47,4 +49,29 @@ func (h *UserHandler) LoginUser(c *gin.Context) {
 		"userID": userID,
 	})
 
+}
+
+func (h *UserHandler) GetUserByID(c *gin.Context) {
+	userIDString := c.Param("userID")
+	userID, er := strconv.Atoi(userIDString)
+	if er != nil {
+		response.ReponseOutput(c, response.Fail, er.Error(), nil)
+		return
+	}
+	user, er := h.UserService.GetUserByID(c, userID)
+	if er != nil {
+		response.ReponseOutput(c, response.Fail, er.Error(), nil)
+		return
+	}
+	response.ReponseOutput(c, response.Success, "", user)
+}
+
+func (h *UserHandler) GetUserByUsername(c *gin.Context) {
+	username := c.Param("username")
+	user, er := h.UserService.GetUserByUsername(c, username)
+	if er != nil {
+		response.ReponseOutput(c, response.Fail, er.Error(), nil)
+		return
+	}
+	response.ReponseOutput(c, response.Success, "", user)
 }
