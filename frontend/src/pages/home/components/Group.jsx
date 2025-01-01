@@ -16,35 +16,49 @@ export const Group = ({ group, isActive, onClick }) => {
     setIsRenameModalVisible(false);
   };
 
-  const items =
-    currentUserId === group.ownerId
-      ? [
-          {
-            key: "rename",
-            label: "Rename Group",
-            onClick: () => setIsRenameModalVisible(true),
-          },
-          {
-            key: "delete",
-            label: "Delete Group",
-            danger: true,
-            onClick: () => handleDelete(group.ID),
-          },
-        ]
-      : [
-          {
-            key: "leave",
-            label: "Leave Group",
-            danger: true,
-            onClick: () => handleLeave(group.ID),
-          },
-        ];
+  let items = [];
+
+  if (currentUserId === group.ownerId) {
+    items = [
+      {
+        key: "rename",
+        label: "Rename Group",
+        onClick: (e) => {
+          setIsRenameModalVisible(true);
+          e.stopPropagation();
+        },
+      },
+      {
+        key: "delete",
+        label: "Delete Group",
+        danger: true,
+        onClick: (e) => {
+          handleDelete(group.ID);
+        },
+      },
+    ];
+  } else {
+    items = [
+      {
+        key: "leave",
+        label: "Leave Group",
+        danger: true,
+        onClick: (e) => {
+          handleLeave(group.ID);
+          e.stopPropagation();
+        },
+      },
+    ];
+  }
 
   return (
     <>
       <List.Item
         className={`ml-2 hover:bg-gray-50 px-4 py-3 ${isActive ? "bg-blue-50" : ""}`}
-        onClick={() => onClick(group.ID)}
+        onClick={() => {
+          console.log("on click here");
+          onClick(group.ID);
+        }}
         style={{ cursor: "pointer" }}
       >
         <List.Item.Meta
@@ -65,9 +79,15 @@ export const Group = ({ group, isActive, onClick }) => {
                   />
                 )}
                 <Dropdown
-                  menu={{ items }}
+                  menu={{
+                    items,
+                    onClick: (e) => {
+                      e.domEvent.stopPropagation(); // Antd Dropdown trả về domEvent
+                    },
+                  }}
                   trigger={["click"]}
                   placement="bottomRight"
+                  destroyPopupOnHide
                 >
                   <MoreOutlined
                     className="text-lg hover:bg-gray-200 rounded-full p-1"

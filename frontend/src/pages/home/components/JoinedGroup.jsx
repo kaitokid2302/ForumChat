@@ -79,9 +79,13 @@ export const JoinedGroup = () => {
   console.log("JoinedGroup component", joinedGroups);
   console.log("filteredGroups", filteredGroups);
 
-  const handleGroupClick = useCallback((groupId) => {
-    handleSelectGroup(groupId);
-  }, []);
+  const handleGroupClick = useCallback(
+    (groupId) => {
+      console.log("handleGroupClick", groupId);
+      handleSelectGroup(groupId);
+    },
+    [handleSelectGroup],
+  );
 
   const handleCreateGroup = useCallback(() => {
     if (!newGroupName.trim()) return;

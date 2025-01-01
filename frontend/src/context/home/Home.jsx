@@ -1,6 +1,7 @@
 // context/home/home.jsx
 import { notification } from "antd";
 import { createContext, useCallback, useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import global from "../../config/config.js";
 import {
   countUnreadMessage,
@@ -29,9 +30,13 @@ export const HomeProvider = ({ children }) => {
   const messageWsRef = useRef(null);
   // Setup WebSockets
 
-  const handleSelectGroup = useCallback((groupId) => {
-    setActiveGroupId(groupId);
-  }, []);
+  const handleSelectGroup = useCallback(
+    (groupId) => {
+      setActiveGroupId(groupId);
+      console.log("Selected group:", groupId);
+    },
+    [setActiveGroupId],
+  );
   // Trong context/home/home.jsx - thêm handleCreate
   const handleCreate = async (groupName) => {
     if (groupWsRef.current?.readyState === WebSocket.OPEN) {
@@ -48,6 +53,8 @@ export const HomeProvider = ({ children }) => {
           getAllJoinedGroups(),
           getAllUnjoinedGroups(),
         ]);
+        console.log("joinedRes", joinedRes);
+        console.log("unjoinedRes", unjoinedRes);
 
         if (!joinedRes?.data || !unjoinedRes?.data) {
           throw new Error("Invalid response format from API");
@@ -119,10 +126,21 @@ export const HomeProvider = ({ children }) => {
 
   const handleDelete = async (groupId) => {
     if (groupWsRef.current?.readyState === WebSocket.OPEN) {
+      const numericGroupId = Number(groupId);
+      const numericActiveGroupId = Number(activeGroupId);
+      if (numericGroupId === numericActiveGroupId) {
+        console.log(
+          "Setting activeGroupId to null - current group is being deleted",
+        );
+
+        setActiveGroupId(null);
+        console.log("after setActiveGroupId(null):", activeGroupId);
+      }
+
       groupWsRef.current.send(
         JSON.stringify({
           type: "delete",
-          group_id: groupId,
+          group_id: numericGroupId,
         }),
       );
 
@@ -396,12 +414,33 @@ export const HomeProvider = ({ children }) => {
           }
 
           case "delete": {
+            console.log("case delete");
+            const numericGroupId = Number(data.group_id);
+            const numericActiveGroupId = Number(activeGroupId);
             setJoinedGroups((prev) =>
               prev.filter((group) => group.ID !== data.group_id),
             );
             setUnjoinedGroups((prev) =>
               prev.filter((group) => group.ID !== data.group_id),
             );
+            // Thêm dòng này để reset activeGroupId khi group bị xóa
+            console.log("numericGroupId", numericGroupId);
+            console.log("numericActiveGroupId", numericActiveGroupId);
+            console.log("activeGroupId", activeGroupId);
+            if (numericGroupId == numericActiveGroupId) {
+              console.log(
+                "Setting activeGroupId to null - received delete event",
+              );
+              const userIDstring = localStorage.getItem("userID");
+              const userID = parseInt(userIDstring);
+              const dataUserID = parseInt(data.user_id);
+
+              if (dataUserID != userID) {
+                console.log("web socket delete group");
+                setActiveGroupId(null);
+              }
+            }
+
             const userID = localStorage.getItem("userID");
             if (data.user_id != userID) {
               openNotification(
@@ -442,7 +481,9 @@ export const HomeProvider = ({ children }) => {
           case "leave":
             // set active group to null if the user leaves the active group
             if (data.group_id === activeGroupId) {
-              setActiveGroupId(null);
+              flushSync(() => {
+                setActiveGroupId(null);
+              });
             }
             break;
 

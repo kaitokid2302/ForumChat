@@ -23,7 +23,10 @@ export const useMessages = () => {
   const messageObserver = useRef(null);
 
   useEffect(() => {
-    if (!activeGroupId) return;
+    if (!activeGroupId) {
+      setMessages([]);
+      return;
+    }
 
     messageObserver.current = new IntersectionObserver(
       debounce(async (entries) => {
@@ -255,5 +258,6 @@ export const useMessages = () => {
     handleSendMessage,
     latestMessageRef,
     messageObserver: messageObserver.current,
+    setMessages,
   };
 };

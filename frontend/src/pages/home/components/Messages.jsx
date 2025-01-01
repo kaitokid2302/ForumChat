@@ -21,7 +21,10 @@ export const Messages = () => {
 
   const unreadMessageRef = useRef(null);
   const scrollContainerRef = useRef(null);
-  const activeGroup = joinedGroups.find((g) => g.id === activeGroupId);
+  const activeGroup = joinedGroups.find((g) => g.ID === activeGroupId);
+  console.log("Active group", activeGroup);
+
+  console.log("Messages component", messages);
 
   useEffect(() => {
     if (!isInitialLoading && messages.length > 0) {
@@ -41,21 +44,20 @@ export const Messages = () => {
       }
     }
   }, [messages, isInitialLoading]);
-
-  // Handle no active group
-  if (!activeGroupId) {
-    return (
-      <div className="flex-1 flex items-center justify-center text-gray-500">
-        Please select a group to view messages
-      </div>
-    );
-  }
-
   // Handle error state
   if (error) {
     return (
       <div className="flex-1 flex items-center justify-center text-red-500">
         {error}
+      </div>
+    );
+  }
+
+  // Handle no active group
+  if (!activeGroupId || !activeGroup) {
+    return (
+      <div className="flex-1 flex items-center justify-center text-gray-500">
+        Please select a group to view messages
       </div>
     );
   }
