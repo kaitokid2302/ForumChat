@@ -17,8 +17,11 @@ export const Group = ({ group, isActive, onClick }) => {
   };
 
   let items = [];
+  console.log("currentUserId", currentUserId);
+  console.log("group.ownerId", group.ownerId);
+  console.log("group.owner_id", group.owner_id);
 
-  if (currentUserId === group.owner_id) {
+  if (currentUserId == group.ownerId || currentUserId == group.owner_id) {
     items = [
       {
         key: "rename",
@@ -50,6 +53,7 @@ export const Group = ({ group, isActive, onClick }) => {
       },
     ];
   }
+  console.log("items", items);
 
   return (
     <>
@@ -67,8 +71,9 @@ export const Group = ({ group, isActive, onClick }) => {
             <div className="flex justify-between items-center">
               <div>
                 <span className="font-medium">{group.name}</span>
-                {currentUserId === group.owner_id && (
-                  <span className="ml-2 text-xs text-gray-500">(Owner)</span>
+                {(group.ownerId === currentUserId ||
+                  group.owner_id === currentUserId) && (
+                  <span className="text-xs text-gray-500 ml-2">(Owner)</span>
                 )}
               </div>
               <div className="flex items-center gap-2">
