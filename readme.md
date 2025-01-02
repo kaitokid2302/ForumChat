@@ -10,6 +10,7 @@
 - Backend: Golang, Gin, Gorm, Postgres, Melody(websocket), JWT
 - Frontend: React, Vite, Tailwind css, AntUI, Websocket, Axios, react-router-dom, formik, react-infinite-scroll-component
 - Devops: Docker, Docker-compose, Digital ocean
+- Architecture: Clean architecture, FSD (Feature Slices Design)
 
 ## Các tính năng:
 
