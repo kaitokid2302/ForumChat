@@ -29,6 +29,19 @@
 
 ## Cài đặt
 
+- Tạo file `local.yaml` trong thư mục `infrastructure/config` với nội dung như sau và điền thông số cần thiết:
+  - ```yaml
+    database:
+      host: localhost
+      port: 5432
+      user:
+      password:
+      database:
+    jwt:
+      key:
+    ```
+- Chạy các lệnh sau:
+
 ```bash
 docker-compose up -d
 npm install
