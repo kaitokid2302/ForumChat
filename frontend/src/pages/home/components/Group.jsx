@@ -18,7 +18,7 @@ export const Group = ({ group, isActive, onClick }) => {
 
   let items = [];
 
-  if (currentUserId === group.ownerId) {
+  if (currentUserId === group.owner_id) {
     items = [
       {
         key: "rename",
@@ -67,7 +67,7 @@ export const Group = ({ group, isActive, onClick }) => {
             <div className="flex justify-between items-center">
               <div>
                 <span className="font-medium">{group.name}</span>
-                {currentUserId === group.ownerId && (
+                {currentUserId === group.owner_id && (
                   <span className="ml-2 text-xs text-gray-500">(Owner)</span>
                 )}
               </div>
